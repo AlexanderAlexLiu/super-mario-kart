@@ -92,6 +92,12 @@ var logo = new Image();
 
 logo.src = 'sprites/nintendo_logo.png';
 
+// TEST ZONE STARTS
+
+var map = new Image();
+
+map.src = 'sprites/circuit.png';
+
 // main game function
 
 function main() {
@@ -116,7 +122,9 @@ function main() {
 
 		drawRect(99, 113, logo.width, logo.height, [255, 0, 0], false, true, 2);
 
-	};
+	} else if (game_state == "test") {
+		ctx.drawImage(map, camera.pos_x, camera.pos_y, map.width, map.height)
+	}
 
 	if (debug) {
 
@@ -126,7 +134,7 @@ function main() {
 
 		ctx.font = "8px Arial";
 
-		ctx.fillText(fps.toString(), 0, 8);
+		ctx.fillText(fps.toString(), 4, 10);
 
 	};
 
@@ -149,6 +157,16 @@ function onKeyDown(event) {
 		console.log(debug);
 
 	};
+
+	if (game_state == 'load' && event.keyCode == 32) {
+		game_state = 'test';
+	}
+	if (event.keyCode == 39) {
+		camera.pos_x -= 1;
+	}
+	if (event.keyCode == 40) {
+		camera.pos_y -= 1;
+	}
 
 };
 
