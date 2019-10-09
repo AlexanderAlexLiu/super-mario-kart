@@ -23,6 +23,7 @@ var dt_1;
 var dt_2;
 var debug = false;
 var body = document.getElementsByTagName("body")[0];
+var fps;
 
 // FOR TEST
 var blockArray = []
@@ -91,10 +92,10 @@ function main() {
 		drawRect(blockArray[i].x % 256, 107 - (Math.sin(blockArray[i].x / (blockArray[i].speed * 2)) * 100), 10, 10, [blockArray[i].r, blockArray[i].g, blockArray[i].b], true)
 	};
 	if (debug) {
-		ctx.fillStyle = '#FFA500';
-		var fps = 1 / ((dt_2 - dt_1) / 1000)
-		ctx.font = "12px Arial";
-		ctx.fillText(fps, 0, 0);
+		ctx.fillStyle = '#FFFFFF';
+		fps = 1 / ((dt_1 - dt_2) / 1000)
+		ctx.font = "8px Arial";
+		ctx.fillText(fps.toString(), 0, 8);
 	}
 	dt_2 = performance.now();
 	window.requestAnimationFrame(main);
