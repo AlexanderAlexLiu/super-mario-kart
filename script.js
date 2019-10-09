@@ -24,6 +24,7 @@ var dt_2;
 var debug = false;
 var body = document.getElementsByTagName("body")[0];
 var fps;
+var fps_smoothing = 0.9;
 
 // FOR TEST
 var blockArray = []
@@ -93,7 +94,7 @@ function main() {
 	};
 	if (debug) {
 		ctx.fillStyle = '#FFFFFF';
-		fps = 1 / ((dt_1 - dt_2) / 1000)
+		fps = Math.round(((fps * fps_smoothing) + (1 / ((dt_1 - dt_2) / 1000)) * (1 - fps_smoothing)));
 		ctx.font = "8px Arial";
 		ctx.fillText(fps.toString(), 0, 8);
 	}
