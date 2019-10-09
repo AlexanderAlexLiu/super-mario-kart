@@ -1,0 +1,23 @@
+/* css for centering the canvas */
+
+#display-surface {
+	/*	
+	display: block;
+	margin-bottom: auto;
+	padding-top: 0;
+	padding-bottom: 0;
+	margin-right: auto;
+	margin-left: auto;
+	*/
+	border-radius: 10px;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	padding: 0;
+	margin: auto;
+	display: block;
+	position: absolute;
+	image-rendering: pixelated;
+}
+
