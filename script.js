@@ -77,11 +77,6 @@ function main() {
 	ctx.imageSmoothingEnabled = false;
 	ctx.imageSmoothingQuality
 	clearScreen();
-	if (debug) {
-		var fps = 1 / ((dt_2 - dt_1) / 1000)
-		ctx.font = "12px Arial";
-		ctx.fillText(fps, 0, 0);
-	}
 	if (game_state == "load") {
 		drawRect(0, 0, WIDTH, HEIGHT, "#000000", true);
 		ctx.drawImage(logo, 99, 113, logo.width, logo.height)
@@ -95,7 +90,11 @@ function main() {
 	for (var i = 0; i < blockArray.length; i++) {
 		drawRect(blockArray[i].x % 256, 107 - (Math.sin(blockArray[i].x / (blockArray[i].speed * 2)) * 100), 10, 10, [blockArray[i].r, blockArray[i].g, blockArray[i].b], true)
 	};
-
+	if (debug) {
+		var fps = 1 / ((dt_2 - dt_1) / 1000)
+		ctx.font = "12px Arial";
+		ctx.fillText(fps, 0, 0);
+	}
 	dt_2 = performance.now();
 	window.requestAnimationFrame(main);
 };
