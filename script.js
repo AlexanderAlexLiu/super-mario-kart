@@ -23,7 +23,7 @@ var dt_1;
 var dt_2;
 var debug = false;
 var body = document.getElementsByTagName("body")[0];
-var fps;
+var fps = 0;
 var fps_smoothing = 0.9;
 
 // FOR TEST
