@@ -75,9 +75,7 @@ function main() {
 	ctx.imageSmoothingEnabled = false;
 	ctx.imageSmoothingQuality
 	clearScreen();
-	if (debug) {
-		ctx.
-	}
+
 	if (game_state == "load") {
 		drawRect(0, 0, WIDTH, HEIGHT, "#000000", true);
 		ctx.drawImage(logo, 99, 113, logo.width, logo.height)
