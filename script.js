@@ -91,6 +91,7 @@ function main() {
 		drawRect(blockArray[i].x % 256, 107 - (Math.sin(blockArray[i].x / (blockArray[i].speed * 2)) * 100), 10, 10, [blockArray[i].r, blockArray[i].g, blockArray[i].b], true)
 	};
 	if (debug) {
+		ctx.fillStyle = '#FFA500';
 		var fps = 1 / ((dt_2 - dt_1) / 1000)
 		ctx.font = "12px Arial";
 		ctx.fillText(fps, 0, 0);
