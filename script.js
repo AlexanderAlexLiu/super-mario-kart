@@ -61,6 +61,7 @@ logo.src = 'sprites/nintendo_logo.png';
 
 // main game function
 function main() {
+	// FOR TEST
 	for (var i = 0; i < blockArray.length; i++) {
 		blockArray[i].x += blockArray[i].speed / 10;
 		updateBlokkk(blockArray[i]);
@@ -68,6 +69,7 @@ function main() {
 			blockArray[i].x = -20;
 		};
 	};
+
 	// math
 	dt_1 = performance.now();
 	// logic
@@ -75,7 +77,11 @@ function main() {
 	ctx.imageSmoothingEnabled = false;
 	ctx.imageSmoothingQuality
 	clearScreen();
-
+	if (debug) {
+		var fps = 1 / ((dt_2 - dt_1) / 1000)
+		ctx.font = "12px Arial";
+		ctx.fillText(fps, 0, 0);
+	}
 	if (game_state == "load") {
 		drawRect(0, 0, WIDTH, HEIGHT, "#000000", true);
 		ctx.drawImage(logo, 99, 113, logo.width, logo.height)
