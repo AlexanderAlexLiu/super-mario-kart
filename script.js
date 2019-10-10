@@ -66,7 +66,7 @@ function init() {
 
 	// create a camera object to control the in-game camera
 
-	camera = {pos_x:0, pos_y:0, angle:0};
+	camera = {pos_x:0, pos_y:0, angle:0, camera_speed: 4, up: false, down: false, left: false, right: false};
 
 	// storing the canvas's width into our WIDTH constant
 
@@ -107,6 +107,20 @@ function main() {
 	dt_1 = performance.now();
 
 	dt = (dt_1 - dt_2) / 1000;
+
+	if (game_state == "test") {
+		console.log(camera.pos_x, camera.pos_y);
+		if (camera.left && camera.pos_x < 0) {
+			camera.pos_x += camera.camera_speed;
+		} else if (camera.right && camera.pos_x > canvas.width - map.width) {
+			camera.pos_x -= camera.camera_speed;
+		}
+		if (camera.up && camera.pos_y < 0) {
+			camera.pos_y += camera.camera_speed;
+		} else if (camera.down && camera.pos_y > canvas.height - map.height) {
+			camera.pos_y -= camera.camera_speed;
+		}
+	}
 
 	// logic
 
@@ -162,17 +176,34 @@ function onKeyDown(event) {
 		game_state = 'test';
 	}
 	if (event.keyCode == 39) {
-		camera.pos_x -= 1;
+		camera.right = true;
+	} else if (event.keyCode == 37) {
+		camera.left = true;
 	}
 	if (event.keyCode == 40) {
-		camera.pos_y -= 1;
+		camera.down = true;
+	} else if (event.keyCode == 38) {
+		camera.up = true;
 	}
+
+	
 
 };
 
 function onKeyUp(event) {
 
 	console.log(event.keyCode);
+
+	if (event.keyCode == 39) {
+		camera.right = false;
+	} else if (event.keyCode == 37) {
+		camera.left = false;
+	}
+	if (event.keyCode == 40) {
+		camera.down = false;
+	} else if (event.keyCode == 38) {
+		camera.up = false;
+	}
 
 };
 
