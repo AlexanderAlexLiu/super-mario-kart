@@ -12,6 +12,7 @@ TODO:
  - Create vector physics engine
  - ??
  - Profit
+ - Use draw offsets to scroll the map rather than changing sprite's x, and y locations.
 */
 
 var canvas;
@@ -110,14 +111,14 @@ function main() {
 
 	if (game_state == "test") {
 		console.log(camera.pos_x, camera.pos_y);
-		if (camera.left && camera.pos_x < 0) {
+		if (camera.left && camera.pos_x < 0 && !camera.right) {
 			camera.pos_x += camera.camera_speed;
-		} else if (camera.right && camera.pos_x > canvas.width - map.width) {
+		} else if (camera.right && camera.pos_x > canvas.width - map.width && !camera.left) {
 			camera.pos_x -= camera.camera_speed;
 		}
-		if (camera.up && camera.pos_y < 0) {
+		if (camera.up && camera.pos_y < 0 && !camera.down) {
 			camera.pos_y += camera.camera_speed;
-		} else if (camera.down && camera.pos_y > canvas.height - map.height) {
+		} else if (camera.down && camera.pos_y > canvas.height - map.height && !camera.up) {
 			camera.pos_y -= camera.camera_speed;
 		}
 	}
