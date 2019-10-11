@@ -1,10 +1,11 @@
 /* Alex Liu
- * October 7, 2019
- * A recreation of Super Mario Circuit for the SNES (Super Nintendo Entertainment System)
+ * October 11, 2019
+ * a recreation of Super Mario Kart for the SNES (Super Nintendo Entertainment System)
  */
 
 /*
 TODO:
+ - Refactor
  - Create a sprite loader
   L Sprite loader must include frames, etc.
   L Somehow get frame counting onKeyDown
@@ -15,158 +16,115 @@ TODO:
  - Use draw offsets to scroll the map rather than changing sprite's x, and y locations.
 */
 
-var canvas;
-var ctx;
-var game_state = "load";
-var camera;
-var WIDTH, HEIGHT;
-var dt;
-var dt_1;
-var dt_2 = 0;
-var debug = false;
-var body = document.getElementsByTagName("body")[0];
-var fps = 0;
-var fps_smoothing = 0.9;
+/*
+JUNK CODE:
+var body = document.getElementsByTagName("body")[0]; // brings the "body" tag into javascript so we can mess with it
+body.style.background = getRandomColor(); // random background color just for fun :>
+*/
 
-function init() {
-	// load the canvas from the html document into a variable called "canvas"
-	canvas = document.getElementById("display-surface");
-	// takes the canvas object and creating a 2d rendering context
-	ctx = canvas.getContext("2d");
-	ctx.imageSmoothingEnabled = false;
-	canvas.width = 256;
-	canvas.height = 224;
-	canvas.style.width = (canvas.width * 2) + "px";
-	canvas.style.height = (canvas.height * 2) + "px";
-	canvas_2 = document.createElement("canvas");
-	ctx_2 = canvas_2.getContext("2d");
-	ctx.imageSmoothingEnabled = false;
-	canvas_2.width = 1024;
-	canvas_2.height = 1024;
-	canvas_2.style.width = (canvas_2.width * 1) + "px";
-	canvas_2.style.height = (canvas_2.height * 1) + "px";
-	// create a camera object to control the in-game camera
-	camera = { pos_x: 0, pos_y: 0, angle: 0, camera_speed: 4, up: false, down: false, left: false, right: false };
-	// storing the canvas's width into our WIDTH constant
-	WIDTH = ctx.canvas.width;
-	// storing the canvas's height into our HEIGHT constant
-	HEIGHT = ctx.canvas.height;
-	// random background color for fun :>
-	body.style.background = getRandomColor();
-	// give the canvas focus so the user doesn't need to click on the window every time the game loads
-	document.getElementById('display-surface').focus();
-	window.requestAnimationFrame(main);
+var canvas, ctx, WIDTH, HEIGHT // declaring the variables (and constants) that will be used for the game's display
+var scale = 1 // a variable used to change the scaling of the game's display
+var debug = false // declaring and initializing a variable to turn on or off debug mode
+var gameState // declaring a variable to keep track of the game's state
+var deltaTime, deltaTime1, deltaTime2 // declaring variables to store and calculate the time it took to update the display (very important for physics!)
+var fps // declaring a variable to track the updates per second
+var fpsSmoothing = 0.9 // declaring and initializing a variable that will be used to keep the tracker for updates per second less variable; the higher, the more smoothing (up to 1)
+
+function initialize() {
+	canvas = document.getElementById("display-surface") // find the HTML element with id "display-surface" and store it's instance into a variable
+	ctx = canvas.getContext("2d") // take the canvas and pass in the "2d" parameter, meaning it will use the Canvas2D library; ctx will be used for the visible display
+	canvas.width = 256; // give the canvas a horizontal resolution in pixels
+	canvas.height = 224; // give the canvas a vertical resolution in pixels
+	canvas.style.width = (canvas.width * scale) + "px" // give the canvas a horizontal size in pixels
+	canvas.style.height = (canvas.height * scale) + "px" // give the canvas a vertical size in pixels
+	WIDTH = ctx.canvas.width; // storing the canvas's width into the width variable (the variable name is uppercase to differentiate between variable and constant)
+	HEIGHT = ctx.canvas.height; // storing the canvas's height into the height variable (the variable name is uppercase to differentiate between variable and constant)
+	document.getElementById('display-surface').focus() // focus the HTML element the game is taking input from so the player doesn't need to click the window every single time they load the game
+	window.requestAnimationFrame(main) // request a screen update from the browser (basically calls main to update)
 };
+
+/*
+	main is a function used as the main loop for the game
+*/
 function main() {
-	// math
-	dt_1 = performance.now();
-	dt = (dt_1 - dt_2) / 1000;
-
-	// logic
-	// drawing
-	clearScreen();
-
-	ctx.drawImage(canvas_2, 0, 0);
-	if (debug) {
-		ctx.fillStyle = '#FFFFFF';
-		fps = Math.round((fps * fps_smoothing) + ((1 / dt) * (1 - fps_smoothing)));
-		ctx.font = "8px Arial";
-		ctx.fillText(fps.toString(), 4, 10);
-	};
-	dt_2 = performance.now();
-	window.requestAnimationFrame(main);
+	window.requestAnimationFrame(main) // the function proceeds to call itself again for another update
 };
 
-// functions to handle key events
+/*
+	onKeyDown is a function takes a keyboard "keydown" event
+	and processes it
+*/
 function onKeyDown(event) {
-	console.log(event.keyCode);
-	if (event.keyCode == 107) {
-		debug = !debug;
-		console.log(debug);
-	};
-	if (game_state == 'load' && event.keyCode == 32) {
-		game_state = 'test';
-	}
-	if (event.keyCode == 39) {
-		camera.right = true;
-	} else if (event.keyCode == 37) {
-		camera.left = true;
-	}
-	if (event.keyCode == 40) {
-		camera.down = true;
-	} else if (event.keyCode == 38) {
-		camera.up = true;
-	}
+	console.log(event)
 };
 
+/*
+	onKeyUp is a function takes a keyboard "keyup" event
+	and processes it
+*/
 function onKeyUp(event) {
-	console.log(event.keyCode);
-	if (event.keyCode == 39) {
-		camera.right = false;
-	} else if (event.keyCode == 37) {
-		camera.left = false;
-	}
-	if (event.keyCode == 40) {
-		camera.down = false;
-	} else if (event.keyCode == 38) {
-		camera.up = false;
-	}
+	console.log(event)
 };
 
-// a function used to clear the screen for the next render (improve this later)
-function clearScreen() {
-	ctx.clearRect(0, 0, WIDTH, HEIGHT);
-};
-
+/*
+	getRandomColor is a function that generates a 
+	random 6 digit hexidecimal number and returns it to the caller
+*/ 
 function getRandomColor() {
-	var letters = '0123456789ABCDEF';
-	var color = '#';
+	var letters = '0123456789ABCDEF'
+	var color = '#'
 	for (var i = 0; i < 6; i++) {
-		color += letters[Math.floor(Math.random() * 16)];
+		color += letters[Math.floor(Math.random() * 16)]
 	};
 	return color;
 };
 
-// function to convert component to hex code
-function componentToHex(c) {
-	var hex = c.toString(16);
+/*
+	componentToHex is a function that returns the corresponding hex value given a unsigned byte
+*/
+function componentToHex(component) {
+	var hex = component.toString(16);
 	return hex.length == 1 ? "0" + hex : hex;
 };
 
-// function to convert rgb to hex codes
-
+/*
+	rgbToHex is a function that converts a rgb color code to a hex color code
+*/
 function rgbToHex(r, g, b) {
 	return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
 };
 
-// function to convert hex to rgb
+/*
+	hexToRgb is a function that takes a 6 digit hex number and returns an array of rgb to the caller
+*/
 function hexToRgb(hex) {
-	var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-	return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : null;
+	var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+	return result ? {r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16)} : null;
 };
 
-// a function to draw rectangles
-function drawRect(x, y, w, h, color, fill = false, stroke = false, stroke_weight = 0) {
-	ctx.beginPath()
-	if (Array.isArray(color)) {
-		ctx.fillStyle = rgbToHex(color[0], color[1], color[2]);
-	} else {
-		ctx.fillStyle = color;
-	};
+/*
+	drawRect is a function that draws a rectangle on a specified canvas
+*/
+function drawRect(context, x, y, w, h, fill = true, fillColor = "#000000", stroke = false, strokeColor = "#FFFFFF", strokeWeight = 1) {
+	context.beginPath()
 	if (fill) {
-		ctx.fillRect(x, y, w, h);
+		if (Array.isArray(fillColor)) {
+			context.fillStyle = rgbToHex(fillColor[0], fillColor[1], fillColor[2])
+		} else {
+			context.fillStyle = fillColor
+		};
+		context.fillRect(x, y, w, h)
 	};
+	context.closePath()
+	context.beginPath()
 	if (stroke) {
-		ctx.lineWidth = stroke_weight;
-		ctx.rect(x, y, w, h);
-		ctx.stroke();
+		context.lineWidth = strokeWeight
+		context.rect(x, y, w, h)
+		context.stroke()
 	};
-	ctx.closePath();
+	context.closePath()
 };
 
-// an event listener for when the page loads. Just so the game loads when the page is finished loading
-window.addEventListener("load", init, false);
-// an event listener for when the page gets a keydown event
-window.addEventListener("keydown", onKeyDown, false);
-// an event listener for when the page gets a keyup event
-window.addEventListener("keyup", onKeyUp, false);
+window.addEventListener("keydown", onKeyDown, false); // an event listener for when the user presses down on a keyboard key
+window.addEventListener("keyup", onKeyUp, false); // an event listener for when the user lifts up off a keyboard key
+window.addEventListener("load", init, false); // an event listener for when the page and all it's code, calls the "initialize" function
