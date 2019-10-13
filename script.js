@@ -6,7 +6,8 @@
 /*
 TODO:
  - Refactor [DONE]
-  L Sprite loader must include frames, etc.
+  L Sprite loader must include frames, etc. [SEMI-DONE]
+  L Make it so the player can go back from race_setup
   L Somehow get frame counting onKeyDown
  - Create map and make moveable camera
  - Create vector physics engine
@@ -29,8 +30,30 @@ var gameState // declaring a variable to keep track of the game's state
 var deltaTime, deltaTime1, deltaTime2 = 0; // declaring variables to store and calculate the time it took to update the display (very important for physics!)
 var fps = 0 // declaring and initializing a variable to track the updates per second
 var fpsSmoothing = 0.9 // declaring and initializing a variable that will be used to keep the tracker for updates per second less variable; the higher, the more smoothing (up to 1)
-var error_img = new Image()
-error_img.src = "sprites/placeholder.png"
+var menuTimings = {backgroundScrollSpeed: 90, ticks: 0, delta: 0, init: false, firstLoad: true}
+var setupTimings = {setupState: 0}
+/*
+	this layer object will be used to create, store, and return multiple layers (other canvases)
+	used for more complicated screen transformations and edits
+*/
+var layers = {
+	layerArray: [], 
+	layerDictionary: {},
+	createLayer: function(name, width, height) {
+		if (!(name in layers.layerDictionary)) {
+			console.log("creating layer with name " + name)
+			layers.layerArray.push(new layer(name, width, height))
+			layers.layerDictionary[name] = layers.layerArray[layers.layerArray.length - 1]
+		} else {
+			throw "A layer with this name already exists!"
+		}
+	},
+	getLayer: function(name) {
+		return layers.layerDictionary[name];
+	}
+};
+var errorImg = new Image() // manually loading in a error image to help figure out what is wrong if a bug happens to appear
+errorImg.src = "sprites/placeholder.png" // defining the location of the error image.
 function initialize() {
 	canvas = document.getElementById("display-surface") // find the HTML element with id "display-surface" and store it's instance into a variable
 	ctx = canvas.getContext("2d") // take the canvas and pass in the "2d" parameter, meaning it will use the Canvas2D library; ctx will be used for the visible display
@@ -40,7 +63,7 @@ function initialize() {
 	canvas.style.height = (canvas.height * scale) + "px" // give the canvas a vertical size in pixels
 	WIDTH = ctx.canvas.width; // storing the canvas's width into the width variable (the variable name is uppercase to differentiate between variable and constant)
 	HEIGHT = ctx.canvas.height; // storing the canvas's height into the height variable (the variable name is uppercase to differentiate between variable and constant)
-	gameState = "load"
+	gameState = "load" // set the game state to load
 	document.getElementById('display-surface').focus() // focus the HTML element the game is taking input from so the player doesn't need to click the window every single time they load the game
 	body = document.getElementsByTagName("body")[0] // getting and importing the body element into javascript
 	body.style.background = getRandomColor(1, 270) // changing the background color for cosmetics
@@ -54,14 +77,37 @@ function main() {
 	deltaTime1 = performance.now() // ALWAYS BE THE FIRST LINE AFTER THE FUNCTION
 	deltaTime = (deltaTime1 - deltaTime2) / 1000 // this calculation should be done before it is used on that current frame
 	fps = Math.round((fps * fpsSmoothing) + ((1 / deltaTime) * (1 - fpsSmoothing)))
-	clearCanvas(ctx)
-	ctx.drawImage(error_img, 0, 0);
+	clearCanvas(ctx) // clearing the main canvas PUT THIS HERE FOR NOW
 	if (gameState === "load") {
-		resources.load(['sprites/nintendo_logo.png', 'sprites/title_screen/title_background.png', 'sprites/title_screen/int_game_title.png'])
-		resources.onReady(function() {gameState = "title_screen"})
+		resources.load(['sprites/nintendo_logo.png', 'sprites/title_screen/title_background.png', 'sprites/title_screen/int_game_title.png', 'sprites/title_screen/title_credits.png']) 
+		resources.onReady(function() {gameState = "title_screen"}) // push a function that changes the game state to title_screen to a stack that will call the pushed function when done loading sprites 
 	} else if (gameState === "title_screen") {
-		drawRect(ctx, 0, 0, WIDTH, HEIGHT, true, [0, 0, 0])
-	}
+		// ALL THIS HAS TO BE REFACTORED
+		if (!menuTimings.init) {
+			menuTimings.delta = performance.now()
+			menuTimings.init = true;
+		}
+		menuTimings.ticks = performance.now() - menuTimings.delta;
+		ctx.drawImage(resources.get("sprites/title_screen/title_background.png"), 0 - ((menuTimings.ticks / 1000 * menuTimings.backgroundScrollSpeed) % 512), 0)
+		ctx.drawImage(resources.get("sprites/title_screen/title_background.png"), 512 - ((menuTimings.ticks / 1000 * menuTimings.backgroundScrollSpeed) % 512), 0)
+		ctx.drawImage(resources.get("sprites/title_screen/int_game_title.png"), 11, 25)
+		ctx.drawImage(resources.get("sprites/title_screen/title_credits.png"), 84, 199)
+		if (menuTimings.ticks <= 4000 && menuTimings.firstLoad) {
+			ctx.globalAlpha = 2 - 0.0005 * menuTimings.ticks
+			drawRect(ctx, 0, 0, WIDTH, HEIGHT, true, [0, 0, 0])
+			ctx.globalAlpha = 1
+			if (menuTimings.ticks <= 2000) {
+				ctx.globalAlpha = 1 - 0.0005 * menuTimings.ticks
+				ctx.drawImage(resources.get("sprites/nintendo_logo.png"), 99, 113)
+				ctx.globalAlpha = 1
+			}
+		} else if (menuTimings.firstLoad) {
+			menuTimings.firstLoad = false;
+		}
+	} else if (gameState === "race_setup") {
+		ctx.drawImage(layers.getLayer("title_frozen").canvas, 0, 0)
+		drawRect(ctx, 64, 120, 126, 41, true, [0, 0, 0])
+	};
 	if (debug) {
 		drawText(ctx, 4, 10, fps.toString(), 8, "#FFFF00", "Arial")
 		drawText(ctx, 4, 20, "gameState: " + gameState, 8, "#FFFFFF", "Arial")
@@ -70,7 +116,15 @@ function main() {
 	window.requestAnimationFrame(main) // the function proceeds to call itself again for another update
 };
 
-/*
+function layer(name, width, height) {
+	this.name = name
+	this.canvas = document.createElement('canvas');
+	this.ctx = this.canvas.getContext("2d")
+	this.canvas.width = width
+	this.canvas.height = height
+};
+
+/*	
 	copy pasted because I didn't feel like coding one on the spot.
 	might refactor to be more readable
 	use: load, get, isReady, onReady.
@@ -99,6 +153,7 @@ function main() {
 			var img = new Image();
 			img.onload = function() {
 				resourceCache[url] = img;
+				console.log("loaded: " + url)
 
 				if(isReady()) {
 					readyCallbacks.forEach(function(func) { func(); });
@@ -106,7 +161,6 @@ function main() {
 			};
 			resourceCache[url] = false;
 			img.src = url;
-			console.log("loaded: " + url)
 		}
 	}
 	function get(url) {
@@ -149,6 +203,11 @@ function onKeyDown(event) {
 	console.log(event)
 	if (event.keyCode == 77 && !event.repeat) {
 		debug = !debug
+	};
+	if (gameState === "title_screen" && menuTimings.ticks > 4200 && event.keyCode == 66) {
+		layers.createLayer("title_frozen", 256, 244)
+		layers.getLayer("title_frozen").ctx.drawImage(canvas, 0, 0)
+		gameState = "race_setup"
 	};
 };
 
