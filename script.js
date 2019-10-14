@@ -31,7 +31,7 @@ var deltaTime, deltaTime1, deltaTime2 = 0; // declaring variables to store and c
 var fps = 0 // declaring and initializing a variable to track the updates per second
 var fpsSmoothing = 0.9 // declaring and initializing a variable that will be used to keep the tracker for updates per second less variable; the higher, the more smoothing (up to 1)
 var menuTimings = {backgroundScrollSpeed: 90, ticks: 0, delta: 0, init: false, firstLoad: true}
-var setupTimings = {setupState: 0}
+var setupTimings = {setupState: 0, menuRectX: 0, menuRectY: 0, menuRectW:0, menuRectH:0, ticks: 0, delta: 0, init: false}
 /*
 	this layer object will be used to create, store, and return multiple layers (other canvases)
 	used for more complicated screen transformations and edits
@@ -106,8 +106,54 @@ function main() {
 		}
 	} else if (gameState === "race_setup") {
 		ctx.drawImage(layers.getLayer("title_frozen").canvas, 0, 0)
-		drawRect(ctx, 64, 120, 126, 41, true, [0, 0, 0])
-	};
+		if (setupTimings.setupState == 0) {
+			// CLEAN THESE UGLY CALCULATIONS UP
+			if (!setupTimings.init) {
+				setupTimings.delta = performance.now()
+				setupTimings.init = true
+				setupTimings.menuRectX = 128;
+				setupTimings.menuRectY = 112;
+			};
+			setupTimings.ticks = performance.now() - setupTimings.delta;
+			if (setupTimings.ticks <= 500) {
+				setupTimings.menuRectW = 0.252 * setupTimings.ticks;
+				setupTimings.menuRectH = 0.082 * setupTimings.ticks;
+				setupTimings.menuRectX = 128 - 0.128 * setupTimings.ticks;
+				setupTimings.menuRectY = 112 + 0.016 * setupTimings.ticks;
+			};
+			drawRect(ctx, Math.ceil(setupTimings.menuRectX), Math.ceil(setupTimings.menuRectY), Math.ceil(setupTimings.menuRectW), Math.ceil(setupTimings.menuRectH), true, [0, 0, 0])
+			/*
+			if (!setupTimings.animationSetup) {
+				setupTimings.menuRectW = 0;
+				setupTimings.menuRectH = 0;
+				setupTimings.menuRectX = 128;
+				setupTimings.menuRectY = 122;
+				setupTimings.animationSetup = true;
+			};
+			if (setupTimings.menuRectW < 126) {
+				setupTimings.menuRectW += (124 / 6)
+			} else {
+				setupTimings.menuRectW = 124
+			};
+			if (setupTimings.menuRectH < 41) {
+				setupTimings.menuRectH += (41 / 6)
+			} else {
+				setupTimings.menuRectH = 41
+			}
+			if (setupTimings.menuRectX > 64) {
+				setupTimings.menuRectX -= (64 / 6)
+			} else {
+				setupTimings.menuRectX = 64
+			};
+			if (setupTimings.menuRectY > 120) {
+				setupTimings.menuRectY -= (120 / 6)
+			} else {
+				setupTimings.menuRectY = 120
+			};
+			drawRect(ctx, setupTimings.menuRectX, setupTimings.menuRectY, setupTimings.menuRectW, setupTimings.menuRectH, true, [0, 0, 0])
+			*/
+		};
+	}; // END
 	if (debug) {
 		drawText(ctx, 4, 10, fps.toString(), 8, "#FFFF00", "Arial")
 		drawText(ctx, 4, 20, "gameState: " + gameState, 8, "#FFFFFF", "Arial")
