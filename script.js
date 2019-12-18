@@ -61,6 +61,7 @@ var gameFont1 = {
 		if (type == 0) {
 			for (var i in extendedFontCharacters) {
 				console.log("recolored " + "\"" + extendedFontCharacters.charAt(i) + "\"")
+				layers.getLayer("gameFont1RecolorLayer").ctx.clearRect(0, 0, 8, 8)
 				layers.getLayer("gameFont1RecolorLayer").ctx.drawImage(this.baseNormalDictionary[extendedFontCharacters.charAt(i)], 0, 0)
 				var imageData = layers.getLayer("gameFont1RecolorLayer").ctx.getImageData(0, 0, 8, 8);
 				for (var y = 0; y < 8; y++) {
