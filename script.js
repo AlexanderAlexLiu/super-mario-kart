@@ -80,6 +80,7 @@ var gameFont1 = {
 						}
 					}
 				}
+				layers.getLayer("gameFontRecolorLayer").ctx.putImageData(imageData, 0 , 0 , 0 , 0, 8, 8);
 				fontDictionary[extendedFontCharacters.charAt(i)].src = layers.getLayer("gameFont1RecolorLayer").canvas.toDataURL();
 				this.recolorDict[name] = fontDictionary
 			}
