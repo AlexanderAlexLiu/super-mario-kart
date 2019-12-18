@@ -27,11 +27,12 @@ var body, canvas, ctx, WIDTH, HEIGHT // declaring the variables (and constants) 
 var scale = 2 // a variable used to change the scaling of the game's display
 var debug = false // declaring and initializing a variable to turn on or off debug mode
 var gameState // declaring a variable to keep track of the game's state
+var subGameState
 var deltaTime, deltaTime1, deltaTime2 = 0; // declaring variables to store and calculate the time it took to update the display (very important for physics!)
 var fps = 0 // declaring and initializing a variable to track the updates per second
 var fpsSmoothing = 0.9 // declaring and initializing a variable that will be used to keep the tracker for updates per second less variable; the higher, the more smoothing (up to 1)
 var menuTimings = {backgroundScrollSpeed: 90, ticks: 0, delta: 0, init: false, firstLoad: true}
-var setupTimings = {setupState: 0, menuRectX: 0, menuRectY: 0, menuRectW:0, menuRectH:0, ticks: 0, delta: 0, init: false}
+var menuValues = {background1XPos: 0, background2XPos: 0}
 /*
 	this layer object will be used to create, store, and return multiple layers (other canvases)
 	used for more complicated screen transformations and edits
@@ -52,8 +53,7 @@ var layers = {
 		return layers.layerDictionary[name];
 	}
 };
-var errorImg = new Image() // manually loading in a error image to help figure out what is wrong if a bug happens to appear
-errorImg.src = "sprites/placeholder.png" // defining the location of the error image.
+
 function initialize() {
 	canvas = document.getElementById("display-surface") // find the HTML element with id "display-surface" and store it's instance into a variable
 	ctx = canvas.getContext("2d") // take the canvas and pass in the "2d" parameter, meaning it will use the Canvas2D library; ctx will be used for the visible display
@@ -67,6 +67,7 @@ function initialize() {
 	document.getElementById('display-surface').focus() // focus the HTML element the game is taking input from so the player doesn't need to click the window every single time they load the game
 	body = document.getElementsByTagName("body")[0] // getting and importing the body element into javascript
 	body.style.background = getRandomColor(1, 270) // changing the background color for cosmetics
+	menuValues.background2XPos = WIDTH
 	window.requestAnimationFrame(main) // request a screen update from the browser (basically calls main to update)
 };
 
@@ -82,14 +83,18 @@ function main() {
 		resources.load(['sprites/nintendo_logo.png', 'sprites/title_screen/title_background.png', 'sprites/title_screen/int_game_title.png', 'sprites/title_screen/title_credits.png']) 
 		resources.onReady(function() {gameState = "title_screen"}) // push a function that changes the game state to title_screen to a stack that will call the pushed function when done loading sprites 
 	} else if (gameState === "title_screen") {
-		// ALL THIS HAS TO BE REFACTORED
 		if (!menuTimings.init) {
-			menuTimings.delta = performance.now()
+			menuTimings.delta = performance.now() // get the amount of time that has passed since the program has sucessfully loaded resources. used for animations
 			menuTimings.init = true;
+			subGameState = "nintendo"
 		}
 		menuTimings.ticks = performance.now() - menuTimings.delta;
-		ctx.drawImage(resources.get("sprites/title_screen/title_background.png"), 0 - ((menuTimings.ticks / 1000 * menuTimings.backgroundScrollSpeed) % 512), 0)
-		ctx.drawImage(resources.get("sprites/title_screen/title_background.png"), 512 - ((menuTimings.ticks / 1000 * menuTimings.backgroundScrollSpeed) % 512), 0)
+		if (subGameState != "game_select") {
+			menuValues.background1XPos = -((menuTimings.ticks / 1000 * menuTimings.backgroundScrollSpeed) % WIDTH)
+			menuValues.background2XPos = WIDTH - ((menuTimings.ticks / 1000 * menuTimings.backgroundScrollSpeed) % WIDTH)
+		}
+		ctx.drawImage(resources.get("sprites/title_screen/title_background.png"), menuValues.background1XPos, 0)
+		ctx.drawImage(resources.get("sprites/title_screen/title_background.png"), menuValues.background2XPos, 0)
 		ctx.drawImage(resources.get("sprites/title_screen/int_game_title.png"), 11, 25)
 		ctx.drawImage(resources.get("sprites/title_screen/title_credits.png"), 84, 199)
 		if (menuTimings.ticks <= 4000 && menuTimings.firstLoad) {
@@ -103,57 +108,9 @@ function main() {
 			}
 		} else if (menuTimings.firstLoad) {
 			menuTimings.firstLoad = false;
+			subGameState = "title"
 		}
-	} else if (gameState === "race_setup") {
-		ctx.drawImage(layers.getLayer("title_frozen").canvas, 0, 0)
-		if (setupTimings.setupState == 0) {
-			// CLEAN THESE UGLY CALCULATIONS UP
-			if (!setupTimings.init) {
-				setupTimings.delta = performance.now()
-				setupTimings.init = true
-				setupTimings.menuRectX = 128;
-				setupTimings.menuRectY = 112;
-			};
-			setupTimings.ticks = performance.now() - setupTimings.delta;
-			if (setupTimings.ticks <= 500) {
-				setupTimings.menuRectW = 0.252 * setupTimings.ticks;
-				setupTimings.menuRectH = 0.082 * setupTimings.ticks;
-				setupTimings.menuRectX = 128 - 0.128 * setupTimings.ticks;
-				setupTimings.menuRectY = 112 + 0.016 * setupTimings.ticks;
-			};
-			drawRect(ctx, Math.ceil(setupTimings.menuRectX), Math.ceil(setupTimings.menuRectY), Math.ceil(setupTimings.menuRectW), Math.ceil(setupTimings.menuRectH), true, [0, 0, 0])
-			/*
-			if (!setupTimings.animationSetup) {
-				setupTimings.menuRectW = 0;
-				setupTimings.menuRectH = 0;
-				setupTimings.menuRectX = 128;
-				setupTimings.menuRectY = 122;
-				setupTimings.animationSetup = true;
-			};
-			if (setupTimings.menuRectW < 126) {
-				setupTimings.menuRectW += (124 / 6)
-			} else {
-				setupTimings.menuRectW = 124
-			};
-			if (setupTimings.menuRectH < 41) {
-				setupTimings.menuRectH += (41 / 6)
-			} else {
-				setupTimings.menuRectH = 41
-			}
-			if (setupTimings.menuRectX > 64) {
-				setupTimings.menuRectX -= (64 / 6)
-			} else {
-				setupTimings.menuRectX = 64
-			};
-			if (setupTimings.menuRectY > 120) {
-				setupTimings.menuRectY -= (120 / 6)
-			} else {
-				setupTimings.menuRectY = 120
-			};
-			drawRect(ctx, setupTimings.menuRectX, setupTimings.menuRectY, setupTimings.menuRectW, setupTimings.menuRectH, true, [0, 0, 0])
-			*/
-		};
-	}; // END
+	}
 	if (debug) {
 		drawText(ctx, 4, 10, fps.toString(), 8, "#FFFF00", "Arial")
 		drawText(ctx, 4, 20, "gameState: " + gameState, 8, "#FFFFFF", "Arial")
@@ -161,7 +118,9 @@ function main() {
 	deltaTime2 = performance.now() // ALWAYS BE RIGHT BEFORE REQUEST ANIMATION FRAME
 	window.requestAnimationFrame(main) // the function proceeds to call itself again for another update
 };
-
+/*
+	layer class to create multiple "drawing surfaces". Makes overlays and stuff easier
+*/
 function layer(name, width, height) {
 	this.name = name
 	this.canvas = document.createElement('canvas');
@@ -250,11 +209,40 @@ function onKeyDown(event) {
 	if (event.keyCode == 77 && !event.repeat) {
 		debug = !debug
 	};
-	if (gameState === "title_screen" && menuTimings.ticks > 4200 && event.keyCode == 66) {
-		layers.createLayer("title_frozen", 256, 244)
-		layers.getLayer("title_frozen").ctx.drawImage(canvas, 0, 0)
-		gameState = "race_setup"
-	};
+	if (event.keyCode == 38) { // UP
+	}
+	if (event.keyCode == 37) { // LEFT
+	}
+	if (event.keyCode == 40) { // DOWN
+	}
+	if (event.keyCode == 39) { // RIGHT
+	}
+	if (event.keyCode == 67) { // C to B
+		if (gameState == "title_screen") {
+			if (subGameState == "title") {
+				subGameState = "game_select"
+			}
+		}
+	}
+	if (event.keyCode == 86) { // V to A
+	}
+	if (event.keyCode == 88) { // X to Y
+	}
+	if (event.keyCode == 68) { // D to X
+	}
+	if (event.keyCode == 32) { // Space to Start
+		if (gameState == "title_screen") {
+			if (subGameState == "title") {
+				subGameState = "game_select"
+			}
+		}
+	}
+	if (event.keyCode == 13) { // Enter to Select
+	}
+	if (event.keyCode == 65) { // A to L
+	}
+	if (event.keyCode == 83) { // S to R
+	}
 };
 
 /*
