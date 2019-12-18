@@ -33,6 +33,8 @@ var fps = 0 // declaring and initializing a variable to track the updates per se
 var fpsSmoothing = 0.9 // declaring and initializing a variable that will be used to keep the tracker for updates per second less variable; the higher, the more smoothing (up to 1)
 var menuTimings = {backgroundScrollSpeed: 90, ticks: 0, delta: 0, init: false, firstLoad: true}
 var menuValues = {background1XPos: 0, background2XPos: 0}
+var game_font_1_paths = []
+var count = 0
 /*
 	this layer object will be used to create, store, and return multiple layers (other canvases)
 	used for more complicated screen transformations and edits
@@ -44,6 +46,7 @@ var layers = {
 		if (!(name in layers.layerDictionary)) {
 			console.log("creating layer with name " + name)
 			layers.layerArray.push(new layer(name, width, height))
+			layers.layerArray[layers.layerArray.length - 1].ctx.imageSmoothingEnabled = false;
 			layers.layerDictionary[name] = layers.layerArray[layers.layerArray.length - 1]
 		} else {
 			throw "A layer with this name already exists!"
@@ -68,6 +71,7 @@ function initialize() {
 	body = document.getElementsByTagName("body")[0] // getting and importing the body element into javascript
 	body.style.background = getRandomColor(1, 270) // changing the background color for cosmetics
 	menuValues.background2XPos = WIDTH
+	ctx.imageSmoothingEnabled = false;
 	window.requestAnimationFrame(main) // request a screen update from the browser (basically calls main to update)
 };
 
@@ -80,7 +84,27 @@ function main() {
 	fps = Math.round((fps * fpsSmoothing) + ((1 / deltaTime) * (1 - fpsSmoothing)))
 	clearCanvas(ctx) // clearing the main canvas PUT THIS HERE FOR NOW
 	if (gameState === "load") {
-		resources.load(['sprites/nintendo_logo.png', 'sprites/title_screen/title_background.png', 'sprites/title_screen/int_game_title.png', 'sprites/title_screen/title_credits.png']) 
+		var resource_paths = ['sprites/nintendo_logo.png', 'sprites/title_screen/title_background.png', 'sprites/title_screen/int_game_title.png', 'sprites/title_screen/title_credits.png']
+		var game_font_1_string = "!()-@+0123456789abcdefghijklmnopqrstuvwxyz"
+		for (let i = 0; i < game_font_1_string.length; i++) {
+			game_font_1_paths.push("font/normal/" + game_font_1_string.charAt(i) + ".png")
+			game_font_1_paths.push("font/gloss/" + game_font_1_string.charAt(i) + ".png")
+		}
+		game_font_1_paths.push("font/normal/" + "1_cc.png")
+		game_font_1_paths.push("font/normal/" + "2_cc.png")
+		game_font_1_paths.push("font/normal/" + "3_cc.png")
+		game_font_1_paths.push("font/normal/" + "4_cc.png")
+		game_font_1_paths.push("font/gloss/" + "1_cc.png")
+		game_font_1_paths.push("font/gloss/" + "2_cc.png")
+		game_font_1_paths.push("font/gloss/" + "3_cc.png")
+		game_font_1_paths.push("font/gloss/" + "4_cc.png")
+
+		game_font_1_paths.push("font/normal/" + "'.png")
+		game_font_1_paths.push("font/normal/" + "..png")
+		game_font_1_paths.push("font/gloss/" + "'.png")
+		game_font_1_paths.push("font/gloss/" + "..png")
+		resource_paths = resource_paths.concat(game_font_1_paths)
+		resources.load(resource_paths) 
 		resources.onReady(function() {gameState = "title_screen"}) // push a function that changes the game state to title_screen to a stack that will call the pushed function when done loading sprites 
 	} else if (gameState === "title_screen") {
 		if (!menuTimings.init) {
@@ -97,6 +121,12 @@ function main() {
 		ctx.drawImage(resources.get("sprites/title_screen/title_background.png"), menuValues.background2XPos, 0)
 		ctx.drawImage(resources.get("sprites/title_screen/int_game_title.png"), 11, 25)
 		ctx.drawImage(resources.get("sprites/title_screen/title_credits.png"), 84, 199)
+		count += 0.1;
+		for (let x = 0; x < 32; x++) {
+			for (let y = 0; y < 28; y++) {
+				ctx.drawImage(resources.get(game_font_1_paths[Math.floor(count) % game_font_1_paths.length]), x * 8, y * 8)
+			}
+		}
 		if (menuTimings.ticks <= 4000 && menuTimings.firstLoad) {
 			ctx.globalAlpha = 2 - 0.0005 * menuTimings.ticks
 			drawRect(ctx, 0, 0, WIDTH, HEIGHT, true, [0, 0, 0])
