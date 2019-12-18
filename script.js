@@ -44,8 +44,8 @@ var gameFont1 = {
 	recolorDict: {},
 	init: function(fontCharacters) {
 		for (var i in fontCharacters) {
-			this.baseGlossDictionary[fontCharacters.charAt(i)] = resources.get("font/normal/" + fontCharacters.charAt(i) + ".png")
-			this.baseNormalDictionary[fontCharacters.charAt(i)] = resources.get("font/gloss/" + fontCharacters.charAt(i) + ".png")
+			this.baseNormalDictionary[fontCharacters.charAt(i)] = resources.get("font/normal/" + fontCharacters.charAt(i) + ".png")
+			this.baseGlossDictionary[fontCharacters.charAt(i)] = resources.get("font/gloss/" + fontCharacters.charAt(i) + ".png")
 		}
 		this.baseNormalDictionary["^"] = resources.get("font/normal/1_cc.png")
 		this.baseNormalDictionary[">"] = resources.get("font/normal/2_cc.png")
