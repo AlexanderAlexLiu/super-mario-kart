@@ -57,7 +57,7 @@ var gameFont1 = {
 		this.baseGlossDictionary["*"] = resources.get("font/gloss/4_cc.png")
 	},
 	createRecolor: function(name, type, color1, color2, color3) {
-		fontDictionary = this.baseNormalDictionary
+		this.fontDictionary = this.baseNormalDictionary
 		if (type == 0) {
 			for (var i in extendedFontCharacters) {
 				console.log("recolored " + "\"" + extendedFontCharacters.charAt(i) + "\"")
@@ -80,8 +80,8 @@ var gameFont1 = {
 						}
 					}
 				}
-				fontDictionary[extendedFontCharacters.charAt(i)].src = layers.getLayer("gameFont1RecolorLayer").canvas.toDataURL();
-				this.recolorArray[name] = fontDictionary
+				this.fontDictionary[extendedFontCharacters.charAt(i)].src = layers.getLayer("gameFont1RecolorLayer").canvas.toDataURL();
+				this.recolorArray[name] = this.fontDictionary
 			}
 		} else if (type == 1) { // glossed
 
