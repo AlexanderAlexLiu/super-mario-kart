@@ -178,7 +178,7 @@ function main() {
 		count += 0.1;
 		for (let x = 0; x < 32; x++) {
 			for (let y = 0; y < 28; y++) {
-				ctx.drawImage(gameFont1.recolorDict["yeet"][extendedFontCharacters.charAt((Math.floor(count) + x) % extendedFontCharacters.length)], x * 8, y * 8)
+				ctx.drawImage(gameFont1.recolorDict["yeet"][extendedFontCharacters.charAt((Math.floor(count)) % extendedFontCharacters.length)], x * 8, y * 8)
 			}
 		}
 		if (menuTimings.ticks <= 4000 && menuTimings.firstLoad) {
