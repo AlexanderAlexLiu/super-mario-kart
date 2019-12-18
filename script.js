@@ -80,7 +80,7 @@ var gameFont1 = {
 						}
 					}
 				}
-				fontDictionary[extendedFontCharacters.charAt(i)].src = layers.getLayer("gameFont1RecolorLayer").ctx.toDataURL();
+				fontDictionary[extendedFontCharacters.charAt(i)].src = layers.getLayer("gameFont1RecolorLayer").canvas.toDataURL();
 				fontDictionary[extendedFontCharacters.charAt(i)].img.crossOrigin = "Anonymous";
 				this.recolorArray[name] = fontDictionary
 			}
