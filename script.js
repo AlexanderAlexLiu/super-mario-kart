@@ -28,13 +28,67 @@ var scale = 2 // a variable used to change the scaling of the game's display
 var debug = false // declaring and initializing a variable to turn on or off debug mode
 var gameState // declaring a variable to keep track of the game's state
 var subGameState
+var loaded = false;
 var deltaTime, deltaTime1, deltaTime2 = 0; // declaring variables to store and calculate the time it took to update the display (very important for physics!)
 var fps = 0 // declaring and initializing a variable to track the updates per second
 var fpsSmoothing = 0.9 // declaring and initializing a variable that will be used to keep the tracker for updates per second less variable; the higher, the more smoothing (up to 1)
 var menuTimings = {backgroundScrollSpeed: 90, ticks: 0, delta: 0, init: false, firstLoad: true}
 var menuValues = {background1XPos: 0, background2XPos: 0}
-var game_font_1_paths = []
+var gameFont1Paths = []
 var count = 0
+var gameFont1String = "!().'-@+0123456789abcdefghijklmnopqrstuvwxyz"
+var extendedFontCharacters = gameFont1String + "^>;*"
+var gameFont1 = {
+	baseGlossDictionary: {},
+	baseNormalDictionary: {},
+	recolorDict: {},
+	init: function(fontCharacters) {
+		for (var i in fontCharacters) {
+			this.baseGlossDictionary[fontCharacters.charAt(i)] = resources.get("font/normal/" + fontCharacters.charAt(i) + ".png")
+			this.baseNormalDictionary[fontCharacters.charAt(i)] = resources.get("font/gloss/" + fontCharacters.charAt(i) + ".png")
+		}
+		this.baseNormalDictionary["^"] = resources.get("font/normal/1_cc.png")
+		this.baseNormalDictionary[">"] = resources.get("font/normal/2_cc.png")
+		this.baseNormalDictionary[";"] = resources.get("font/normal/3_cc.png")
+		this.baseNormalDictionary["*"] = resources.get("font/normal/4_cc.png")
+		this.baseGlossDictionary["^"] = resources.get("font/gloss/1_cc.png")
+		this.baseGlossDictionary[">"] = resources.get("font/gloss/2_cc.png")
+		this.baseGlossDictionary[";"] = resources.get("font/gloss/3_cc.png")
+		this.baseGlossDictionary["*"] = resources.get("font/gloss/4_cc.png")
+	},
+	createRecolor: function(name, type, color1, color2, color3) {
+		fontDictionary = this.baseNormalDictionary
+		if (type == 0) {
+			for (var i in extendedFontCharacters) {
+				console.log("recolored " + "\"" + extendedFontCharacters.charAt(i) + "\"")
+				layers.getLayer("gameFont1RecolorLayer").ctx.drawImage(this.baseNormalDictionary[extendedFontCharacters.charAt(i)], 0, 0)
+				var imageData = layers.getLayer("gameFont1RecolorLayer").ctx.getImageData(0, 0, 8, 8);
+				for (var y = 0; y < 8; y++) {
+					for (var x = 0; x < 8; x++) {
+						var index=(y * 4) * 8 + (x * 4);
+						var red = imageData.data[index];
+						var green = imageData.data[index +1];
+						var blue = imageData.data[index +2];
+						if (red == 0) {
+							imageData.data[index] = color1[0]
+							imageData.data[index + 1] = color1[1]
+							imageData.data[index + 2] = color1[2]
+						} else if (red == 248) {
+							imageData.data[index] = color2[0]
+							imageData.data[index + 1] = color2[1]
+							imageData.data[index + 2] = color2[2]
+						}
+					}
+				}
+				//fontDictionary[extendedFontCharacters.charAt(i)].src = layers.getLayer("gameFont1RecolorLayer").ctx.toDataURL();
+				fontDictionary[extendedFontCharacters.charAt(i)].img.crossOrigin = "Anonymous";
+				this.recolorArray[name] = fontDictionary
+			}
+		} else if (type == 1) { // glossed
+
+		}
+	}
+}
 /*
 	this layer object will be used to create, store, and return multiple layers (other canvases)
 	used for more complicated screen transformations and edits
@@ -45,9 +99,9 @@ var layers = {
 	createLayer: function(name, width, height) {
 		if (!(name in layers.layerDictionary)) {
 			console.log("creating layer with name " + name)
-			layers.layerArray.push(new layer(name, width, height))
-			layers.layerArray[layers.layerArray.length - 1].ctx.imageSmoothingEnabled = false;
-			layers.layerDictionary[name] = layers.layerArray[layers.layerArray.length - 1]
+			this.layerArray.push(new layer(name, width, height))
+			this.layerArray[layers.layerArray.length - 1].ctx.imageSmoothingEnabled = false;
+			this.layerDictionary[name] = layers.layerArray[layers.layerArray.length - 1]
 		} else {
 			throw "A layer with this name already exists!"
 		}
@@ -83,31 +137,30 @@ function main() {
 	deltaTime = (deltaTime1 - deltaTime2) / 1000 // this calculation should be done before it is used on that current frame
 	fps = Math.round((fps * fpsSmoothing) + ((1 / deltaTime) * (1 - fpsSmoothing)))
 	clearCanvas(ctx) // clearing the main canvas PUT THIS HERE FOR NOW
-	if (gameState === "load") {
+	if (gameState === "load" && !loaded) {
 		var resource_paths = ['sprites/nintendo_logo.png', 'sprites/title_screen/title_background.png', 'sprites/title_screen/int_game_title.png', 'sprites/title_screen/title_credits.png']
-		var game_font_1_string = "!()-@+0123456789abcdefghijklmnopqrstuvwxyz"
-		for (let i = 0; i < game_font_1_string.length; i++) {
-			game_font_1_paths.push("font/normal/" + game_font_1_string.charAt(i) + ".png")
-			game_font_1_paths.push("font/gloss/" + game_font_1_string.charAt(i) + ".png")
+		gameFont1String = "!().'-@+0123456789abcdefghijklmnopqrstuvwxyz"
+		for (let i = 0; i < gameFont1String.length; i++) {
+			gameFont1Paths.push("font/normal/" + gameFont1String.charAt(i) + ".png")
+			gameFont1Paths.push("font/gloss/" + gameFont1String.charAt(i) + ".png")
 		}
-		game_font_1_paths.push("font/normal/" + "1_cc.png")
-		game_font_1_paths.push("font/normal/" + "2_cc.png")
-		game_font_1_paths.push("font/normal/" + "3_cc.png")
-		game_font_1_paths.push("font/normal/" + "4_cc.png")
-		game_font_1_paths.push("font/gloss/" + "1_cc.png")
-		game_font_1_paths.push("font/gloss/" + "2_cc.png")
-		game_font_1_paths.push("font/gloss/" + "3_cc.png")
-		game_font_1_paths.push("font/gloss/" + "4_cc.png")
-
-		game_font_1_paths.push("font/normal/" + "'.png")
-		game_font_1_paths.push("font/normal/" + "..png")
-		game_font_1_paths.push("font/gloss/" + "'.png")
-		game_font_1_paths.push("font/gloss/" + "..png")
-		resource_paths = resource_paths.concat(game_font_1_paths)
-		resources.load(resource_paths) 
-		resources.onReady(function() {gameState = "title_screen"}) // push a function that changes the game state to title_screen to a stack that will call the pushed function when done loading sprites 
+		gameFont1Paths.push("font/normal/" + "1_cc.png")
+		gameFont1Paths.push("font/normal/" + "2_cc.png")
+		gameFont1Paths.push("font/normal/" + "3_cc.png")
+		gameFont1Paths.push("font/normal/" + "4_cc.png")
+		gameFont1Paths.push("font/gloss/" + "1_cc.png")
+		gameFont1Paths.push("font/gloss/" + "2_cc.png")
+		gameFont1Paths.push("font/gloss/" + "3_cc.png")
+		gameFont1Paths.push("font/gloss/" + "4_cc.png")
+		layers.createLayer("gameFont1RecolorLayer", 8, 8)
+		resource_paths = resource_paths.concat(gameFont1Paths)
+		resources.load(resource_paths)
+		resources.onReady(function() {gameState = "title_screen"}) // push a function that changes the game state to title_screen to a stack that will call the pushed function when done loading sprites
+		loaded = true
 	} else if (gameState === "title_screen") {
 		if (!menuTimings.init) {
+			gameFont1.init(gameFont1String)
+			gameFont1.createRecolor("yeet", 0, [0, 0, 0], [255, 255, 255])
 			menuTimings.delta = performance.now() // get the amount of time that has passed since the program has sucessfully loaded resources. used for animations
 			menuTimings.init = true;
 			subGameState = "nintendo"
@@ -124,7 +177,7 @@ function main() {
 		count += 0.1;
 		for (let x = 0; x < 32; x++) {
 			for (let y = 0; y < 28; y++) {
-				ctx.drawImage(resources.get(game_font_1_paths[Math.floor(count) % game_font_1_paths.length]), x * 8, y * 8)
+				ctx.drawImage(gameFont1.recolorDict["yeet"][extendedFontCharacters.charAt(Math.floor(count) % extendedFontCharacters.length)], x * 8, y * 8)
 			}
 		}
 		if (menuTimings.ticks <= 4000 && menuTimings.firstLoad) {
@@ -189,7 +242,7 @@ function layer(name, width, height) {
 			img.onload = function() {
 				resourceCache[url] = img;
 				console.log("loaded: " + url)
-
+				img.crossOrigin = "Anonymous";
 				if(isReady()) {
 					readyCallbacks.forEach(function(func) { func(); });
 				}
