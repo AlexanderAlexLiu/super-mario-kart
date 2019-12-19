@@ -112,7 +112,7 @@ var gameFont1 = {
 						} else if (red == 200) {
 							imageData.data[index] = color3[0]
 							imageData.data[index + 1] = color3[1]
-							imageData.data[index + 1] = color3[2]
+							imageData.data[index + 2] = color3[2]
 						}
 					}
 				}
@@ -231,8 +231,8 @@ function main() {
 			gameFont1.createRecolor("yeet", 0, [0, 0, 0], [255, 255, 255])
 			gameFont1.createRecolor("blue", 0, [0, 104, 248], [248, 248, 248])
 			gameFont1.createRecolor("pink", 0, [208, 0, 208], [248, 248, 248])
-			gameFont1.createRecolor("blueGloss", 0, [0, 104, 248], [248, 248, 248], [200, 200, 232])
-			gameFont1.createRecolor("pinkGloss", 0, [208, 0, 208], [248, 248, 248], [200, 200, 232])
+			gameFont1.createRecolor("blueGloss", 1, [0, 104, 248], [248, 248, 248], [200, 200, 232])
+			gameFont1.createRecolor("pinkGloss", 1, [208, 0, 208], [248, 248, 248], [200, 200, 232])
 			menuTimings.delta = performance.now() // get the amount of time that has passed since the program has sucessfully loaded resources. used for animations
 			menuTimings.init = true;
 			subGameState = "nintendo"
