@@ -96,7 +96,7 @@ var gameFont1 = {
 			fontDictionary = this.baseGlossDictionary
 			for (var i in extendedFontCharacters) {
 				layers.getLayer("gameFont1RecolorLayer").ctx.clearRect(0, 0, 8, 8)
-				layers.getLayer("gameFont1RecolorLayer").ctx.drawImage(this.baseNormalDictionary[extendedFontCharacters.charAt(i)], 0, 0)
+				layers.getLayer("gameFont1RecolorLayer").ctx.drawImage(this.baseGlossDictionary[extendedFontCharacters.charAt(i)], 0, 0)
 				var imageData = layers.getLayer("gameFont1RecolorLayer").ctx.getImageData(0, 0, 8, 8);
 				for (var y = 0; y < 8; y++) {
 					for (var x = 0; x < 8; x++) {
