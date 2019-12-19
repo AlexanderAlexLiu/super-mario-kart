@@ -238,8 +238,8 @@ function main() {
 	}
 	if (debug) {
 		gameFont1.drawText("fps-" + fps.toString(), 0, 0, "yeet", ctx)
-		gameFont1.drawText("gameState: " + gameState, 0, 8, "yeet", ctx)
-		gameFont1.drawText("subGameState: " + subGameState, 0, 16, "yeet", ctx)
+		gameFont1.drawText("gameState-" + gameState, 0, 8, "yeet", ctx)
+		gameFont1.drawText("subGameState-" + subGameState, 0, 16, "yeet", ctx)
 	}
 	deltaTime2 = performance.now() // ALWAYS BE RIGHT BEFORE REQUEST ANIMATION FRAME
 	window.requestAnimationFrame(main) // the function proceeds to call itself again for another update
