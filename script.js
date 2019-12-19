@@ -34,7 +34,7 @@ var fps = 0 // declaring and initializing a variable to track the updates per se
 var fpsSmoothing = 0.9 // declaring and initializing a variable that will be used to keep the tracker for updates per second less variable; the higher, the more smoothing (up to 1)
 var menuTimings = {backgroundScrollSpeed: 90, ticks: 0, delta: 0, init: false, firstLoad: true}
 var menuValues = {background1XPos: 0, background2XPos: 0}
-var gameSelectValues = {playerCount: 1}
+var gameSelectValues = {playerCount: 0}
 var gameFont1Paths = []
 var count = 0
 var gameFont1String = "!().'-@+0123456789abcdefghijklmnopqrstuvwxyz"
@@ -196,9 +196,9 @@ function main() {
 		}
 		if (subGameState == "player_select") {
 			drawRect(ctx, 64, 120, 125, 40, true, "#000000")
-			if (gameSelectValues.playerCount == 1) {
+			if (gameSelectValues.playerCount == 0) {
 				ctx.drawImage(resources.get("sprites/title_screen/selector_mushroom.png"), 83, 127)
-			} else if (gameSelectValues.playerCount == 2) {
+			} else if (gameSelectValues.playerCount == 1) {
 				ctx.drawImage(resources.get("sprites/title_screen/selector_mushroom.png"), 83, 144)
 			}
 		}
@@ -317,13 +317,18 @@ function onKeyDown(event) {
 	if (event.keyCode == 38) { // UP
 		if (gameState == "title_screen") {
 			if (subGameState == "player_select") {
-				gameSelectValues.playerCount = mod(gameSelectValues.playerCount + 1)
+				gameSelectValues.playerCount = mod(gameSelectValues.playerCount + 1, 2)
 			}
 		}
 	}
 	if (event.keyCode == 37) { // LEFT
 	}
 	if (event.keyCode == 40) { // DOWN
+		if (gameState == "title_screen") {
+			if (subGameState == "player_select") {
+				gameSelectValues.playerCount = mod(gameSelectValues.playerCount - 1, 2)
+			}
+		}
 	}
 	if (event.keyCode == 39) { // RIGHT
 	}
