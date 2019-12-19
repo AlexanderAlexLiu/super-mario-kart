@@ -133,6 +133,7 @@ var gameFont1 = {
 		var xOffset = 0;
 		string = string.toLowerCase();
 		for (var i in string) {
+			console.log("trying to draw with " + name)
 			if (string.charAt(i) == " ") {
 				xOffset += 8
 			} else if (string.charAt(i) == "^") {
