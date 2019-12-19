@@ -61,6 +61,7 @@ var gameFont1 = {
 		this.baseGlossDictionary["*"] = resources.get("font/gloss/4_cc.png")
 	},
 	createRecolor: function(name, type, color1, color2, color3 = null) {
+		layers.getLayer("gameFont1RecolorLayer").ctx.clearRect(0, 0, 8, 8)
 		if (type === 0) {
 			fontDictionary = this.baseNormalDictionary
 			for (var i in extendedFontCharacters) {
