@@ -281,6 +281,7 @@ function main() {
 		}
 	}
 	if (debug) {
+		console.log("debug")
 		gameFont1.drawText("fps-" + fps.toString(), 0, 0, "yeet", ctx)
 		gameFont1.drawText("gameState-" + gameState.replace("_", "."), 0, 8, "yeet", ctx)
 		gameFont1.drawText("subGameState-" + subGameState.replace("_", "."), 0, 16, "yeet", ctx)
