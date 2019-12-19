@@ -93,6 +93,7 @@ var gameFont1 = {
 	},
 	drawText: function(string, x, y, name, context) {
 		var xOffset = 0;
+		string = string.toLowerCase();
 		for (var i in string) {
 			if (string.charAt(i) == " ") {
 				xOffset += 8
