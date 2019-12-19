@@ -34,6 +34,7 @@ var fps = 0 // declaring and initializing a variable to track the updates per se
 var fpsSmoothing = 0.9 // declaring and initializing a variable that will be used to keep the tracker for updates per second less variable; the higher, the more smoothing (up to 1)
 var menuTimings = {backgroundScrollSpeed: 90, ticks: 0, delta: 0, init: false, firstLoad: true}
 var menuValues = {background1XPos: 0, background2XPos: 0}
+var gameSelectValues = {playerCount: 1}
 var gameFont1Paths = []
 var count = 0
 var gameFont1String = "!().'-@+0123456789abcdefghijklmnopqrstuvwxyz"
@@ -139,7 +140,13 @@ function main() {
 	fps = Math.round((fps * fpsSmoothing) + ((1 / deltaTime) * (1 - fpsSmoothing)))
 	clearCanvas(ctx) // clearing the main canvas PUT THIS HERE FOR NOW
 	if (gameState === "load" && !loaded) {
-		var resource_paths = ['sprites/nintendo_logo.png', 'sprites/title_screen/title_background.png', 'sprites/title_screen/int_game_title.png', 'sprites/title_screen/title_credits.png']
+		var resource_paths = [
+		'sprites/nintendo_logo.png',
+		'sprites/title_screen/title_background.png',
+		'sprites/title_screen/int_game_title.png',
+		'sprites/title_screen/title_credits.png',
+		'sprites/title_screen/selector_mushroom.png'
+		]
 		gameFont1String = "!().'-@+0123456789abcdefghijklmnopqrstuvwxyz"
 		for (let i = 0; i < gameFont1String.length; i++) {
 			gameFont1Paths.push("font/normal/" + gameFont1String.charAt(i) + ".png")
@@ -183,6 +190,11 @@ function main() {
 		}
 		if (subGameState == "game_select") {
 			drawRect(ctx, 64, 120, 125, 40, true, "#000000")
+			if (gameSelectValues.playerCount == 1) {
+				ctx.drawImage(resources.get("sprites/title_screen/selector_mushroom.png"), 83, 127)
+			} else if (gameSelectValues.playerCount == 2) {
+				ctx.drawImage(resources.get("sprites/title_screen/selector_mushroom.png"), 83, 144)
+			}
 		}
 		if (menuTimings.ticks <= 4000 && menuTimings.firstLoad) {
 			ctx.globalAlpha = 2 - 0.0005 * menuTimings.ticks
