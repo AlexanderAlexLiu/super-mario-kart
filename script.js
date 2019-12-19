@@ -37,6 +37,7 @@ var menuValues = {background1XPos: 0, background2XPos: 0}
 var gameSelectValues = {playerCount: 0}
 var gameFont1Paths = []
 var count = 0
+var controlBooleans = {up: false, down: false, right: false, left: false, b: false, a: false, x: false, y: false, start: false, select: false, l: false, r: false}
 var gameFont1String = "!().'-@+0123456789abcdefghijklmnopqrstuvwxyz"
 var extendedFontCharacters = gameFont1String + "^>;*"
 var gameFont1 = {
@@ -88,6 +89,25 @@ var gameFont1 = {
 			}
 		} else if (type == 1) { // glossed
 
+		}
+	},
+	drawText: function(string, x, y, name, context) {
+		var xOffset = 0;
+		for (var i in string) {
+			if (string.charAt(i) == " ") {
+				xOffset += 8
+			} else if (string.charAt(i) == "^") {
+				xOffset += 4
+				layer.ctx.drawImage(this.recolorDict[name]["^"], x + xOffset, y - 4)
+				layer.ctx.drawImage(this.recolorDict[name][">"], x + xOffset, y - 4)
+				xOffset += 8
+				layer.ctx.drawImage(this.recolorDict[name]["^"], x + xOffset, y + 4)
+				layer.ctx.drawImage(this.recolorDict[name][">"], x + xOffset, y + 4)
+				xOffset += 4
+			} else {
+				xOffset += 8
+				context.drawImage(this.recolorDict[name][string.charAt(i)], x + xOffset, y)
+			}
 		}
 	}
 }
@@ -217,6 +237,7 @@ function main() {
 		}
 	}
 	if (debug) {
+		gameFont1.drawText("fps-" + fps.toString(), 0, 0, "yeet", ctx)
 		drawText(ctx, 4, 10, fps.toString(), 8, "#FFFF00", "Arial")
 		drawText(ctx, 4, 20, "gameState: " + gameState, 8, "#FFFFFF", "Arial")
 	}
@@ -309,54 +330,55 @@ function clearCanvas(context) {
 	onKeyDown is a function takes a keyboard "keydown" event
 	and processes it
 */
+
 function onKeyDown(event) {
 	console.log(event)
 	if (event.keyCode == 77 && !event.repeat) {
 		debug = !debug
 	};
-	if (event.keyCode == 38) { // UP
+	if (event.keyCode == 38 && !controlBooleans.up) { // UP
 		if (gameState == "title_screen") {
 			if (subGameState == "player_select") {
 				gameSelectValues.playerCount = mod(gameSelectValues.playerCount + 1, 2)
 			}
 		}
 	}
-	if (event.keyCode == 37) { // LEFT
+	if (event.keyCode == 37 && !controlBooleans.left) { // LEFT
 	}
-	if (event.keyCode == 40) { // DOWN
+	if (event.keyCode == 40 && !controlBooleans.down) { // DOWN
 		if (gameState == "title_screen") {
 			if (subGameState == "player_select") {
 				gameSelectValues.playerCount = mod(gameSelectValues.playerCount - 1, 2)
 			}
 		}
 	}
-	if (event.keyCode == 39) { // RIGHT
+	if (event.keyCode == 39 && !controlBooleans.right) { // RIGHT
 	}
-	if (event.keyCode == 67) { // C to B
+	if (event.keyCode == 67 && !controlBooleans.b) { // C to B
 		if (gameState == "title_screen") {
 			if (subGameState == "title") {
 				subGameState = "player_select"
 			}
 		}
 	}
-	if (event.keyCode == 86) { // V to A
+	if (event.keyCode == 86 && !controlBooleans.a) { // V to A
 	}
-	if (event.keyCode == 88) { // X to Y
+	if (event.keyCode == 88 && !controlBooleans.y) { // X to Y
 	}
-	if (event.keyCode == 68) { // D to X
+	if (event.keyCode == 68 && !controlBooleans.x) { // D to X
 	}
-	if (event.keyCode == 32) { // Space to Start
+	if (event.keyCode == 32 && !controlBooleans.start) { // Space to Start
 		if (gameState == "title_screen") {
 			if (subGameState == "title") {
 				subGameState = "player_select"
 			}
 		}
 	}
-	if (event.keyCode == 13) { // Enter to Select
+	if (event.keyCode == 13 && !controlBooleans.select) { // Enter to Select
 	}
-	if (event.keyCode == 65) { // A to L
+	if (event.keyCode == 65 && !controlBooleans.l) { // A to L
 	}
-	if (event.keyCode == 83) { // S to R
+	if (event.keyCode == 83 && !controlBooleans.r) { // S to R
 	}
 };
 
@@ -435,7 +457,6 @@ function drawRect(context, x, y, w, h, fill = true, fillColor = "#000000", strok
 	};
 	context.closePath()
 };
-
 /* 
 	drawText is a function to draw text on a given canvas
 	used for debug purposes so it's minimally developed
@@ -446,7 +467,6 @@ function drawText(context, x, y, text, size, color, name) {
 	context.font = size + "px " + name
 	context.fillText(text, x, y)
 };
-
 window.addEventListener("keydown", onKeyDown, false); // an event listener for when the user presses down on a keyboard key
 window.addEventListener("keyup", onKeyUp, false); // an event listener for when the user lifts up off a keyboard key
 window.addEventListener("load", initialize, false); // an event listener for when the page and all it's code, calls the "initialize" function
