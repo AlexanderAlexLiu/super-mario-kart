@@ -14,6 +14,8 @@ TODO:
  - ??
  - Profit
  - Use draw offsets to scroll the map rather than changing sprite's x, and y locations.
+ - LIMIT FPS !!!!!!!!!!!! <<<<<=======<<<<<<=============<<<=====
+ - BUTTON PRESS LIMIT <<<++++++
 */
 
 /*
@@ -59,10 +61,9 @@ var gameFont1 = {
 		this.baseGlossDictionary["*"] = resources.get("font/gloss/4_cc.png")
 	},
 	createRecolor: function(name, type, color1, color2, color3) {
-		fontDictionary = this.baseNormalDictionary
 		if (type == 0) {
+			fontDictionary = this.baseNormalDictionary
 			for (var i in extendedFontCharacters) {
-				console.log("recolored " + "\"" + extendedFontCharacters.charAt(i) + "\"")
 				layers.getLayer("gameFont1RecolorLayer").ctx.clearRect(0, 0, 8, 8)
 				layers.getLayer("gameFont1RecolorLayer").ctx.drawImage(this.baseNormalDictionary[extendedFontCharacters.charAt(i)], 0, 0)
 				var imageData = layers.getLayer("gameFont1RecolorLayer").ctx.getImageData(0, 0, 8, 8);
@@ -83,12 +84,43 @@ var gameFont1 = {
 						}
 					}
 				}
+				console.log("recolored " + "\"" + extendedFontCharacters.charAt(i) + "\"")
 				layers.getLayer("gameFont1RecolorLayer").ctx.putImageData(imageData, 0 , 0 , 0 , 0, 8, 8);
 				fontDictionary[extendedFontCharacters.charAt(i)].src = layers.getLayer("gameFont1RecolorLayer").canvas.toDataURL();
 				this.recolorDict[name] = fontDictionary
 			}
 		} else if (type == 1) { // glossed
-
+			fontDictionary = this.baseGlossDictionary
+			for (var i in extendedFontCharacters) {
+				layers.getLayer("gameFont1RecolorLayer").ctx.clearRect(0, 0, 8, 8)
+				layers.getLayer("gameFont1RecolorLayer").ctx.drawImage(this.baseNormalDictionary[extendedFontCharacters.charAt(i)], 0, 0)
+				var imageData = layers.getLayer("gameFont1RecolorLayer").ctx.getImageData(0, 0, 8, 8);
+				for (var y = 0; y < 8; y++) {
+					for (var x = 0; x < 8; x++) {
+						var index=(y * 4) * 8 + (x * 4);
+						var red = imageData.data[index];
+						var green = imageData.data[index +1];
+						var blue = imageData.data[index +2];
+						if (red == 0) {
+							imageData.data[index] = color1[0]
+							imageData.data[index + 1] = color1[1]
+							imageData.data[index + 2] = color1[2]
+						} else if (red == 248) {
+							imageData.data[index] = color2[0]
+							imageData.data[index + 1] = color2[1]
+							imageData.data[index + 2] = color2[2]
+						} else if (red == 200) {
+							imageData.data[index] = color3[0]
+							imageData.data[index + 1] = color3[1]
+							imageData.data[index + 1] = color3[2]
+						}
+					}
+				}
+				console.log("recolored " + "\"" + extendedFontCharacters.charAt(i) + "\"")
+				layers.getLayer("gameFont1RecolorLayer").ctx.putImageData(imageData, 0 , 0 , 0 , 0, 8, 8);
+				fontDictionary[extendedFontCharacters.charAt(i)].src = layers.getLayer("gameFont1RecolorLayer").canvas.toDataURL();
+				this.recolorDict[name] = fontDictionary
+			}
 		}
 	},
 	drawText: function(string, x, y, name, context) {
@@ -195,7 +227,12 @@ function main() {
 	} else if (gameState === "title_screen") {
 		if (!menuTimings.init) {
 			gameFont1.init(gameFont1String)
+			// outside, inside, gloss
 			gameFont1.createRecolor("yeet", 0, [0, 0, 0], [255, 255, 255])
+			gameFont1.createRecolor("blue", 0, [0, 104, 248], [248, 248, 248])
+			gameFont1.createRecolor("pink", 0, [208, 0, 208], [248, 248, 248])
+			gameFont1.createRecolor("blueGloss", 0, [0, 104, 248], [248, 248, 248], [200, 200, 232])
+			gameFont1.createRecolor("pinkGloss", 0, [208, 0, 208], [248, 248, 248], [200, 200, 232])
 			menuTimings.delta = performance.now() // get the amount of time that has passed since the program has sucessfully loaded resources. used for animations
 			menuTimings.init = true;
 			subGameState = "nintendo"
@@ -224,6 +261,10 @@ function main() {
 			} else if (gameSelectValues.playerCount == 1) {
 				ctx.drawImage(resources.get("sprites/title_screen/selector_mushroom.png"), 83, 144)
 			}
+			gameFont1.drawText("1", 100, 128, "blueGloss", ctx)
+			gameFont1.drawText("2", 100, 144, "pinkGloss", ctx)
+			gameFont1.drawText("p game", 108, 128, "blue", ctx)
+			gameFont1.drawText("p game", 108, 144, "pink", ctx)
 		}
 		if (menuTimings.ticks <= 4000 && menuTimings.firstLoad) {
 			ctx.globalAlpha = 2 - 0.0005 * menuTimings.ticks
