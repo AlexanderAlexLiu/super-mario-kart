@@ -87,7 +87,10 @@ var gameFont1 = {
 				console.log("recolored " + "\"" + extendedFontCharacters.charAt(i) + "\"")
 				layers.getLayer("gameFont1RecolorLayer").ctx.putImageData(imageData, 0 , 0 , 0 , 0, 8, 8);
 				fontDictionary[extendedFontCharacters.charAt(i)].src = layers.getLayer("gameFont1RecolorLayer").canvas.toDataURL();
-				this.recolorDict[name] = fontDictionary
+				this.recolorDict[name] = {}
+				for (var key in fontDictionary) {
+					this.recolorDict[name][key] = fontDictionary[key]
+				}
 			}
 		} else if (type == 1) { // glossed
 			fontDictionary = this.baseGlossDictionary
@@ -116,10 +119,13 @@ var gameFont1 = {
 						}
 					}
 				}
-				console.log("recolored " + "\"" + extendedFontCharacters.charAt(i) + "\"")
+				console.log("recolored gloss " + "\"" + extendedFontCharacters.charAt(i) + "\"")
 				layers.getLayer("gameFont1RecolorLayer").ctx.putImageData(imageData, 0 , 0 , 0 , 0, 8, 8);
 				fontDictionary[extendedFontCharacters.charAt(i)].src = layers.getLayer("gameFont1RecolorLayer").canvas.toDataURL();
-				this.recolorDict[name] = fontDictionary
+				this.recolorDict[name] = {}
+				for (var key in fontDictionary) {
+					this.recolorDict[name][key] = fontDictionary[key]
+				}
 			}
 		}
 	},
