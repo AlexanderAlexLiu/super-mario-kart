@@ -229,10 +229,10 @@ function main() {
 			gameFont1.init(gameFont1String)
 			// outside, inside, gloss
 			gameFont1.createRecolor("yeet", 0, [0, 0, 0], [255, 255, 255])
-			gameFont1.createRecolor("blue", 0, [0, 104, 248], [248, 248, 248])
-			gameFont1.createRecolor("pink", 0, [208, 0, 208], [248, 248, 248])
-			gameFont1.createRecolor("blueGloss", 1, [0, 104, 248], [248, 248, 248], [200, 200, 232])
-			gameFont1.createRecolor("pinkGloss", 1, [208, 0, 208], [248, 248, 248], [200, 200, 232])
+			//gameFont1.createRecolor("blue", 0, [0, 104, 248], [248, 248, 248])
+			//gameFont1.createRecolor("pink", 0, [208, 0, 208], [248, 248, 248])
+			//gameFont1.createRecolor("blueGloss", 1, [0, 104, 248], [248, 248, 248], [200, 200, 232])
+			//gameFont1.createRecolor("pinkGloss", 1, [208, 0, 208], [248, 248, 248], [200, 200, 232])
 			menuTimings.delta = performance.now() // get the amount of time that has passed since the program has sucessfully loaded resources. used for animations
 			menuTimings.init = true;
 			subGameState = "nintendo"
