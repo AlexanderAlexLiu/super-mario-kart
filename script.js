@@ -208,12 +208,14 @@ function main() {
 		ctx.drawImage(resources.get("sprites/title_screen/title_background.png"), menuValues.background2XPos, 0)
 		ctx.drawImage(resources.get("sprites/title_screen/int_game_title.png"), 11, 25)
 		ctx.drawImage(resources.get("sprites/title_screen/title_credits.png"), 84, 199)
+		/*
 		count += 1;
 		for (let x = 0; x < 32; x++) {
 			for (let y = 0; y < 28; y++) {
 				ctx.drawImage(gameFont1.recolorDict["yeet"][extendedFontCharacters.charAt((Math.floor(count)) % extendedFontCharacters.length)], x * 8, y * 8)
 			}
 		}
+		*/
 		if (subGameState == "player_select") {
 			drawRect(ctx, 64, 120, 125, 40, true, "#000000")
 			if (gameSelectValues.playerCount == 0) {
