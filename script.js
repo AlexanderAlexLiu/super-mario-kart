@@ -292,6 +292,7 @@ function main() {
 		gameFont1.drawText("fps-" + fps.toString(), 0, 0, "yeet", ctx)
 		gameFont1.drawText("gameState-" + gameState.replace("_", "."), 0, 8, "yeet", ctx)
 		gameFont1.drawText("subGameState-" + subGameState.replace("_", "."), 0, 16, "yeet", ctx)
+		ctx.drawImage(gameFont1.recolorDict["yeet"]["1"], 0, 0, 100, 100)
 	}
 	deltaTime2 = performance.now() // ALWAYS BE RIGHT BEFORE REQUEST ANIMATION FRAME
 	window.requestAnimationFrame(main) // the function proceeds to call itself again for another update
