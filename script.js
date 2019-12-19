@@ -14,7 +14,7 @@ var canvas // stores a Element object representing the element with the "display
 var ctx  // stores the drawing context of whatever element the canvas variable has stored
 var WIDTH, HEIGHT // stores constants of the canvas's width and height respectively
 var game = {gameScale: 2, debug: false, gameState: "", subGameState: ""}
-var fps = {deltaTime: undefined, pastTime: 0, presentTime: undefined, framesPerSecond: 0, fpsSmoothing: 0.9}
+var fps = {deltaTime: 1, pastTime: 0, presentTime: 0, framesPerSecond: 0, fpsSmoothing: 0.9}
 var clock = {frameInterval: undefined, then: undefined, now: undefined, startTime: undefined, fpsCap: undefined, elapsed: undefined}
 var menuBackgroundValues = {backgroundXPos1: undefined, backgroundXPos2: undefined}
 var resourcePaths = [
@@ -67,7 +67,7 @@ function init() {
 	canvas.style.height = `${canvasScaledWidth}px`
 	WIDTH = ctx.canvas.width;
 	HEIGHT = ctx.canvas.height;
-	game.gameState = "load"
+	game.gameState = "title_screen"
 	document.getElementById('display-surface').focus()
 	body = document.getElementsByTagName("body")[0]
 	body.style.background = getRandomColor(1, 270)
@@ -75,7 +75,7 @@ function init() {
 	menuBackgroundValues.backgroundXPos1 = 0
 	ctx.imageSmoothingEnabled = false;
 	clock.fpsCap = 60
-	clock.frameInterval = 1000 / clock.fpsCap
+	clock.frameInterval = 1000.0 / clock.fpsCap
 	clock.then = performance.now()
 	clock.startTime = clock.then
 	for (let i = 0; i < gameFont.gameFont1String.length; i++) {
@@ -95,27 +95,22 @@ var gameFont = {
 	gameFont1String: "!().'-@+0123456789abcdefghijklmnopqrstuvwxyz"
 }
 function main() {
-	window.requestAnimationFrame(main) 
-	fps.presentTime = performance.now()
-	fps.deltaTime = (fps.presentTime - fps.pastTime) / 1000
-	fps.framesPerSecond = Math.round((fps.framesPerSecond * fps.fpsSmoothing) + ((1 / fps.deltaTime) * (1 - fps.fpsSmoothing)))
+	window.requestAnimationFrame(main)
 	clock.now = performance.now();
 	clock.elapsed = clock.now - clock.then
-	/*
+	fps.presentTime = performance.now()
+	fps.framesPerSecond = (fps.framesPerSecond * fps.fpsSmoothing) + ((1.0 / fps.deltaTime) * (1 - fps.fpsSmoothing))
 	if (clock.elapsed > clock.frameInterval) {
-		clock.then = clock.now - (clock.elapsed - clock.frameInterval)
+		fps.deltaTime = (fps.presentTime - fps.pastTime) / 1000
+		clock.then = clock.now - (clock.elapsed % clock.frameInterval)
 		clearCanvas(ctx)
-		console.log("yes")
 		if (game.debug) {
-			drawText(ctx, 4, 10, fps.framesPerSecond.toString(), 8, "#FFFF00", "Arial")
+			drawText(ctx, 4, 10, Math.round(fps.framesPerSecond).toString(), 8, "#FFFF00", "Arial")
 			drawText(ctx, 4, 20, "gameState: " + game.gameState, 8, "#FFFFFF", "Arial")
 		}
-	}*/
-	clearCanvas(ctx)
-	if (game.debug) {
-		drawText(ctx, 4, 10, fps.framesPerSecond.toString(), 8, "#FFFF00", "Arial")
-		drawText(ctx, 4, 20, "gameState: " + game.gameState, 8, "#FFFFFF", "Arial")
+		fps.pastTime = performance.now()
 	}
+	
 	/*
 	if (gameState === "title_screen") {
 		if (!menuTimings.init) {
@@ -157,7 +152,6 @@ function main() {
 		drawText(ctx, 4, 20, "gameState: " + gameState, 8, "#FFFFFF", "Arial")
 	}
 	*/
-	fps.pastTime = performance.now() // ALWAYS BE RIGHT BEFORE REQUEST ANIMATION FRAME
 };
 
 
