@@ -105,8 +105,8 @@ var gameFont1 = {
 				layer.ctx.drawImage(this.recolorDict[name][">"], x + xOffset, y + 4)
 				xOffset += 4
 			} else {
-				xOffset += 8
 				context.drawImage(this.recolorDict[name][string.charAt(i)], x + xOffset, y)
+				xOffset += 8
 			}
 		}
 	}
@@ -238,8 +238,8 @@ function main() {
 	}
 	if (debug) {
 		gameFont1.drawText("fps-" + fps.toString(), 0, 0, "yeet", ctx)
-		drawText(ctx, 4, 10, fps.toString(), 8, "#FFFF00", "Arial")
-		drawText(ctx, 4, 20, "gameState: " + gameState, 8, "#FFFFFF", "Arial")
+		gameFont1.drawText("gameState: " + gameState, 0, 8, "yeet", ctx)
+		gameFont1.drawText("subGameState: " + subGameState, 0, 16, "yeet", ctx)
 	}
 	deltaTime2 = performance.now() // ALWAYS BE RIGHT BEFORE REQUEST ANIMATION FRAME
 	window.requestAnimationFrame(main) // the function proceeds to call itself again for another update
