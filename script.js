@@ -91,6 +91,12 @@ var gameFont1 = {
 		}
 	}
 }
+/* 
+since javascript doesn't have true mod, we're creating a function for it!
+*/
+function mod(n, m) {
+	return ((n % m) + m) % m;
+}  
 /*
 	this layer object will be used to create, store, and return multiple layers (other canvases)
 	used for more complicated screen transformations and edits
@@ -174,7 +180,7 @@ function main() {
 			subGameState = "nintendo"
 		}
 		menuTimings.ticks = performance.now() - menuTimings.delta;
-		if (subGameState != "game_select") {
+		if (subGameState != "player_select") {
 			menuValues.background1XPos = -((menuTimings.ticks / 1000 * menuTimings.backgroundScrollSpeed) % WIDTH)
 			menuValues.background2XPos = WIDTH - ((menuTimings.ticks / 1000 * menuTimings.backgroundScrollSpeed) % WIDTH)
 		}
@@ -182,13 +188,13 @@ function main() {
 		ctx.drawImage(resources.get("sprites/title_screen/title_background.png"), menuValues.background2XPos, 0)
 		ctx.drawImage(resources.get("sprites/title_screen/int_game_title.png"), 11, 25)
 		ctx.drawImage(resources.get("sprites/title_screen/title_credits.png"), 84, 199)
-		count += 0.1;
+		count += 1;
 		for (let x = 0; x < 32; x++) {
 			for (let y = 0; y < 28; y++) {
 				ctx.drawImage(gameFont1.recolorDict["yeet"][extendedFontCharacters.charAt((Math.floor(count)) % extendedFontCharacters.length)], x * 8, y * 8)
 			}
 		}
-		if (subGameState == "game_select") {
+		if (subGameState == "player_select") {
 			drawRect(ctx, 64, 120, 125, 40, true, "#000000")
 			if (gameSelectValues.playerCount == 1) {
 				ctx.drawImage(resources.get("sprites/title_screen/selector_mushroom.png"), 83, 127)
@@ -309,6 +315,11 @@ function onKeyDown(event) {
 		debug = !debug
 	};
 	if (event.keyCode == 38) { // UP
+		if (gameState == "title_screen") {
+			if (subGameState == "player_select") {
+				gameSelectValues.playerCount = mod(gameSelectValues.playerCount + 1)
+			}
+		}
 	}
 	if (event.keyCode == 37) { // LEFT
 	}
@@ -319,7 +330,7 @@ function onKeyDown(event) {
 	if (event.keyCode == 67) { // C to B
 		if (gameState == "title_screen") {
 			if (subGameState == "title") {
-				subGameState = "game_select"
+				subGameState = "player_select"
 			}
 		}
 	}
@@ -332,7 +343,7 @@ function onKeyDown(event) {
 	if (event.keyCode == 32) { // Space to Start
 		if (gameState == "title_screen") {
 			if (subGameState == "title") {
-				subGameState = "game_select"
+				subGameState = "player_select"
 			}
 		}
 	}
