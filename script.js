@@ -181,6 +181,9 @@ function main() {
 				ctx.drawImage(gameFont1.recolorDict["yeet"][extendedFontCharacters.charAt((Math.floor(count)) % extendedFontCharacters.length)], x * 8, y * 8)
 			}
 		}
+		if (subGameState == "game_select") {
+			drawRect(ctx, 64, 120, 125, 40, true, "#000000")
+		}
 		if (menuTimings.ticks <= 4000 && menuTimings.firstLoad) {
 			ctx.globalAlpha = 2 - 0.0005 * menuTimings.ticks
 			drawRect(ctx, 0, 0, WIDTH, HEIGHT, true, [0, 0, 0])
