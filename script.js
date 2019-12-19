@@ -60,7 +60,7 @@ var gameFont1 = {
 		this.baseGlossDictionary[";"] = resources.get("font/gloss/3_cc.png")
 		this.baseGlossDictionary["*"] = resources.get("font/gloss/4_cc.png")
 	},
-	createRecolor: function(name, type, color1, color2, color3) {
+	createRecolor: function(name, type, color1, color2, color3 = null) {
 		if (type == 0) {
 			fontDictionary = this.baseNormalDictionary
 			for (var i in extendedFontCharacters) {
