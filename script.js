@@ -13,49 +13,47 @@ var body // stores a Element object representing the HTML body
 var canvas // stores a Element object representing the element with the "display-surface" id
 var ctx  // stores the drawing context of whatever element the canvas variable has stored
 var WIDTH, HEIGHT // stores constants of the canvas's width and height respectively
-var game = {gameScale: 2, debug: false, gameState: "", subGameState: ""}
-var fps = {deltaTime: 1, pastTime: 0, presentTime: 0, framesPerSecond: 0, fpsSmoothing: 0.9}
-var clock = {frameInterval: undefined, then: undefined, now: undefined, startTime: undefined, fpsCap: undefined, elapsed: undefined}
-var menuBackgroundValues = {backgroundXPos1: undefined, backgroundXPos2: undefined}
+var game = { gameScale: 2, debug: false, gameState: "", subGameState: "" }
+var fps = { deltaTime: 1, pastTime: 0, presentTime: 0, framesPerSecond: 0, fpsSmoothing: 0.9 }
+var clock = { frameInterval: undefined, then: undefined, now: undefined, startTime: undefined, fpsCap: undefined, elapsed: undefined }
+var menuBackgroundValues = { backgroundXPos1: undefined, backgroundXPos2: undefined, scrollSpeed: 90}
+var controlBooleans = { up: false, down: false, right: false, left: false, b: false, a: false, x: false, y: false, start: false, select: false, l: false, r: false }
+var controlBinds = { debug: 77, up: 38, left: 37, down: 40, right: 39, b: 67, a: 86, y: 88, x: 68, start: 32, select: 13, l: 65, r: 83 }
+var mainMenu = {startTime: 0, initialized: false, sinceStart: 0}
 var resourcePaths = [
 	'sprites/nintendo_logo.png',
 	'sprites/title_screen/title_background.png',
 	'sprites/title_screen/int_game_title.png',
-	'sprites/title_screen/title_credits.png'
+	'sprites/title_screen/title_credits.png',
+	'sprites/title_screen/selector_mushroom.png'
 ]
-/*
-var menuTimings = {backgroundScrollSpeed: 90, ticks: 0, delta: 0, init: false, firstLoad: true}
-var menuValues = {background1XPos: 0, background2XPos: 0}
-var game_font_1_paths = []
-*/
-
 var layers = {
 	layerDictionary: {},
-	createLayer: function(layerName, layerWidth, layerHeight) {
+	createLayer: function (layerName, layerWidth, layerHeight) {
 		if (!layerName in this.layerDictionary) {
-			console.log(`Creating a ${layerWidth}px by ${layerHeight}px layer named ${layerName}`);
-			this.layerDictionary[layerName] = new Layer(layerName, layerWidth, layerHeight);
-			this.layerDictionary[layerName].ctx.imageSmoothingEnabled = false;
+			console.log(`Creating a ${layerWidth}px by ${layerHeight}px layer named ${layerName}`)
+			this.layerDictionary[layerName] = new Layer(layerName, layerWidth, layerHeight)
+			this.layerDictionary[layerName].ctx.imageSmoothingEnabled = false
 		} else {
 			throw `A layer called ${layerName} already exists.`;
 		}
 	},
-	getLayer: function(layerName) {
+	getLayer: function (layerName) {
 		layer = layers.layerDictionary[layerName];
 		if (typeof layer !== 'undefined') {
-			throw `Layer "${layerName}" doesn't exist.`;
+			throw `Layer "${layerName}" doesn't exist.`
 		} else {
 			return layer;
 		}
 	}
-};
+}
 function Layer(layerName, layerWidth, layerHeight) {
 	this.name = layerName;
 	this.canvas = document.createElement('canvas');
 	this.ctx = this.canvas.getContext("2d");
 	this.canvas.width = layerHeight;
 	this.canvas.height = layerWidth;
-};
+}
 function init() {
 	canvas = document.getElementById("display-surface");
 	ctx = canvas.getContext("2d");
@@ -63,15 +61,16 @@ function init() {
 	canvas.height = 224;
 	const canvasScaledWidth = canvas.width * game.gameScale
 	const canvasScaledHeight = canvas.height * game.gameScale
-	canvas.style.width = `${canvasScaledHeight}px`
-	canvas.style.height = `${canvasScaledWidth}px`
+	canvas.style.width = `${canvasScaledWidth}px`
+	canvas.style.height = `${canvasScaledHeight}px`
 	WIDTH = ctx.canvas.width;
 	HEIGHT = ctx.canvas.height;
-	game.gameState = "title_screen"
+	game.gameState = "menu_screen"
+	game.subGameState = "nintendo"
 	document.getElementById('display-surface').focus()
 	body = document.getElementsByTagName("body")[0]
 	body.style.background = getRandomColor(1, 270)
-	menuBackgroundValues.backgroundXPos2 = WIDTH
+	menuBackgroundValues.backgroundXPos2 = 0
 	menuBackgroundValues.backgroundXPos1 = 0
 	ctx.imageSmoothingEnabled = false;
 	clock.fpsCap = 60
@@ -87,9 +86,9 @@ function init() {
 		gameFont.gameFont1ResourcePaths.push(`font/gloss/${i}_cc.png`)
 	}
 	resourcePaths = resourcePaths.concat(gameFont.gameFont1ResourcePaths)
-	resources.load(resourcePaths) 
-	resources.onReady(function() {main()})
-};
+	resources.load(resourcePaths)
+	resources.onReady(function () { main() })
+}
 var gameFont = {
 	gameFont1ResourcePaths: [],
 	gameFont1String: "!().'-@+0123456789abcdefghijklmnopqrstuvwxyz"
@@ -100,75 +99,43 @@ function main() {
 	clock.elapsed = clock.now - clock.then
 	fps.presentTime = performance.now()
 	fps.framesPerSecond = (fps.framesPerSecond * fps.fpsSmoothing) + ((1.0 / fps.deltaTime) * (1 - fps.fpsSmoothing))
-	if (clock.elapsed > clock.frameInterval) {
+	if (clock.elapsed >= clock.frameInterval) {
 		fps.deltaTime = (fps.presentTime - fps.pastTime) / 1000
 		clock.then = clock.now - (clock.elapsed % clock.frameInterval)
-		clearCanvas(ctx)
-		if (game.debug) {
-			drawText(ctx, 4, 10, Math.round(fps.framesPerSecond).toString(), 8, "#FFFF00", "Arial")
-			drawText(ctx, 4, 20, "gameState: " + game.gameState, 8, "#FFFFFF", "Arial")
+		if (game.gameState == "menu_screen") {
+			if (!mainMenu.initialized) {
+				mainMenu.startTime = performance.now()
+				mainMenu.initialized = true
+			}
+			mainMenu.sinceStart = performance.now() - mainMenu.startTime 
+			if (game.subGameState != "player_select") {
+				menuBackgroundValues.backgroundXPos1 = -((mainMenu.sinceStart / 1000 * menuBackgroundValues.scrollSpeed) % WIDTH)
+				menuBackgroundValues.backgroundXPos2 = WIDTH - ((mainMenu.sinceStart / 1000 * menuBackgroundValues.scrollSpeed) % WIDTH)
+			}
+			ctx.drawImage(resources.get("sprites/title_screen/title_background.png"), menuBackgroundValues.backgroundXPos1, 0)
+			ctx.drawImage(resources.get("sprites/title_screen/title_background.png"), menuBackgroundValues.backgroundXPos2, 0)
+			ctx.drawImage(resources.get("sprites/title_screen/int_game_title.png"), 11, 25)
+			ctx.drawImage(resources.get("sprites/title_screen/title_credits.png"), 84, 199)
+			
+		} else if (game.gameState == "game_screen") {
 		}
 		fps.pastTime = performance.now()
 	}
-	
-	/*
-	if (gameState === "title_screen") {
-		if (!menuTimings.init) {
-			menuTimings.delta = performance.now() // get the amount of time that has passed since the program has sucessfully loaded resources. used for animations
-			menuTimings.init = true;
-			subGameState = "nintendo"
-		}
-		menuTimings.ticks = performance.now() - menuTimings.delta;
-		if (subGameState != "game_select") {
-			menuValues.background1XPos = -((menuTimings.ticks / 1000 * menuTimings.backgroundScrollSpeed) % WIDTH)
-			menuValues.background2XPos = WIDTH - ((menuTimings.ticks / 1000 * menuTimings.backgroundScrollSpeed) % WIDTH)
-		}
-		ctx.drawImage(resources.get("sprites/title_screen/title_background.png"), menuValues.background1XPos, 0)
-		ctx.drawImage(resources.get("sprites/title_screen/title_background.png"), menuValues.background2XPos, 0)
-		ctx.drawImage(resources.get("sprites/title_screen/int_game_title.png"), 11, 25)
-		ctx.drawImage(resources.get("sprites/title_screen/title_credits.png"), 84, 199)
-		count += 0.1;
-		for (let x = 0; x < 32; x++) {
-			for (let y = 0; y < 28; y++) {
-				ctx.drawImage(resources.get(game_font_1_paths[Math.floor(count) % game_font_1_paths.length]), x * 8, y * 8)
-			}
-		}
-		if (menuTimings.ticks <= 4000 && menuTimings.firstLoad) {
-			ctx.globalAlpha = 2 - 0.0005 * menuTimings.ticks
-			drawRect(ctx, 0, 0, WIDTH, HEIGHT, true, [0, 0, 0])
-			ctx.globalAlpha = 1
-			if (menuTimings.ticks <= 2000) {
-				ctx.globalAlpha = 1 - 0.0005 * menuTimings.ticks
-				ctx.drawImage(resources.get("sprites/nintendo_logo.png"), 99, 113)
-				ctx.globalAlpha = 1
-			}
-		} else if (menuTimings.firstLoad) {
-			menuTimings.firstLoad = false;
-			subGameState = "title"
-		}
-	}
-	if (debug) {
-		drawText(ctx, 4, 10, fps.toString(), 8, "#FFFF00", "Arial")
-		drawText(ctx, 4, 20, "gameState: " + gameState, 8, "#FFFFFF", "Arial")
-	}
-	*/
 };
-
-
 /*	
 	copy pasted because I didn't feel like coding one on the spot.
 	might refactor to be more readable
 	use: load, get, isReady, onReady.
 */
-(function() {
+(function () {
 	var resourceCache = {};
 	var loading = [];
 	var readyCallbacks = [];
 
 	// Load an image url or an array of image urls
 	function load(urlOrArr) {
-		if(urlOrArr instanceof Array) {
-			urlOrArr.forEach(function(url) {
+		if (urlOrArr instanceof Array) {
+			urlOrArr.forEach(function (url) {
 				_load(url);
 			});
 		}
@@ -177,17 +144,17 @@ function main() {
 		}
 	}
 	function _load(url) {
-		if(resourceCache[url]) {
+		if (resourceCache[url]) {
 			return resourceCache[url];
 		}
 		else {
 			var img = new Image();
-			img.onload = function() {
+			img.onload = function () {
 				resourceCache[url] = img;
 				console.log("loaded: " + url)
 
-				if(isReady()) {
-					readyCallbacks.forEach(function(func) { func(); });
+				if (isReady()) {
+					readyCallbacks.forEach(function (func) { func(); });
 				}
 			};
 			resourceCache[url] = false;
@@ -199,9 +166,9 @@ function main() {
 	}
 	function isReady() {
 		var ready = true;
-		for(var k in resourceCache) {
-			if(resourceCache.hasOwnProperty(k) &&
-			   !resourceCache[k]) {
+		for (var k in resourceCache) {
+			if (resourceCache.hasOwnProperty(k) &&
+				!resourceCache[k]) {
 				ready = false;
 			}
 		}
@@ -210,7 +177,7 @@ function main() {
 	function onReady(func) {
 		readyCallbacks.push(func);
 	}
-	window.resources = { 
+	window.resources = {
 		load: load,
 		get: get,
 		onReady: onReady,
@@ -232,42 +199,31 @@ function clearCanvas(context) {
 */
 function onKeyDown(event) {
 	console.log(event)
-	if (event.keyCode == 77 && !event.repeat) {
-		game.debug = !game.debug
-	};
-	if (event.keyCode == 38) { // UP
+	if (event.keyCode == controlBinds.debug && !event.repeat) {
 	}
-	if (event.keyCode == 37) { // LEFT
+	if (event.keyCode == controlBinds.up && !controlBooleans.up) { // UP
 	}
-	if (event.keyCode == 40) { // DOWN
+	if (event.keyCode == controlBinds.left && !controlBooleans.left) { // LEFT
 	}
-	if (event.keyCode == 39) { // RIGHT
+	if (event.keyCode == controlBinds.down && !controlBooleans.down) { // DOWN
 	}
-	if (event.keyCode == 67) { // C to B
-		if (gameState == "title_screen") {
-			if (subGameState == "title") {
-				subGameState = "game_select"
-			}
-		}
+	if (event.keyCode == controlBinds.right && !controlBooleans.right) { // RIGHT
 	}
-	if (event.keyCode == 86) { // V to A
+	if (event.keyCode == controlBinds.b && !controlBooleans.b) { // C to B
 	}
-	if (event.keyCode == 88) { // X to Y
+	if (event.keyCode == controlBinds.a && !controlBooleans.a) { // V to A
 	}
-	if (event.keyCode == 68) { // D to X
+	if (event.keyCode == controlBinds.y && !controlBooleans.y) { // X to Y
 	}
-	if (event.keyCode == 32) { // Space to Start
-		if (gameState == "title_screen") {
-			if (subGameState == "title") {
-				subGameState = "game_select"
-			}
-		}
+	if (event.keyCode == controlBinds.x && !controlBooleans.x) { // D to X
 	}
-	if (event.keyCode == 13) { // Enter to Select
+	if (event.keyCode == controlBinds.start && !controlBooleans.start) { // Space to Start
 	}
-	if (event.keyCode == 65) { // A to L
+	if (event.keyCode == controlBinds.select && !controlBooleans.select) { // Enter to Select
 	}
-	if (event.keyCode == 83) { // S to R
+	if (event.keyCode == controlBinds.l && !controlBooleans.l) { // A to L
+	}
+	if (event.keyCode == controlBinds.r && !controlBooleans.r) { // S to R
 	}
 };
 
@@ -277,13 +233,39 @@ function onKeyDown(event) {
 */
 function onKeyUp(event) {
 	console.log(event)
+	if (event.keyCode == controlBinds.debug && !event.repeat) {
+	}
+	if (event.keyCode == controlBinds.up && !controlBooleans.up) { // UP
+	}
+	if (event.keyCode == controlBinds.left && !controlBooleans.left) { // LEFT
+	}
+	if (event.keyCode == controlBinds.down && !controlBooleans.down) { // DOWN
+	}
+	if (event.keyCode == controlBinds.right && !controlBooleans.right) { // RIGHT
+	}
+	if (event.keyCode == controlBinds.b && !controlBooleans.b) { // C to B
+	}
+	if (event.keyCode == controlBinds.a && !controlBooleans.a) { // V to A
+	}
+	if (event.keyCode == controlBinds.y && !controlBooleans.y) { // X to Y
+	}
+	if (event.keyCode == controlBinds.x && !controlBooleans.x) { // D to X
+	}
+	if (event.keyCode == controlBinds.start && !controlBooleans.start) { // Space to Start
+	}
+	if (event.keyCode == controlBinds.select && !controlBooleans.select) { // Enter to Select
+	}
+	if (event.keyCode == controlBinds.l && !controlBooleans.l) { // A to L
+	}
+	if (event.keyCode == controlBinds.r && !controlBooleans.r) { // S to R
+	}
 };
 
 /*
 	getRandomColor is a function that generates a 
 	random 6 digit hexidecimal number and returns it to the caller
 	mode 1 generates a random variation of a given hue
-*/ 
+*/
 function getRandomColor(mode = 0, hue = 0) {
 	if (mode === 0) {
 		var letters = '0123456789ABCDEF'
@@ -321,8 +303,11 @@ function rgbToHex(r, g, b) {
 */
 function hexToRgb(hex) {
 	var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-	return result ? {r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16)} : null;
+	return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : null;
 };
+function mod(n, m) {
+	return ((n % m) + m) % m;
+}
 
 /*
 	drawRect is a function that draws a rectangle on a specified canvas
