@@ -13,7 +13,7 @@ var body // stores a Element object representing the HTML body
 var canvas // stores a Element object representing the element with the "display-surface" id
 var ctx  // stores the drawing context of whatever element the canvas variable has stored
 var WIDTH, HEIGHT // stores constants of the canvas's width and height respectively
-var game = { gameScale: 2, debug: false, gameState: "", subGameState: "" }
+var game = { gameScale: 3, debug: false, gameState: "", subGameState: "" }
 var fps = { deltaTime: 1, pastTime: 0, presentTime: 0, framesPerSecond: 0, fpsSmoothing: 0.9 }
 var clock = { frameInterval: undefined, then: undefined, now: undefined, startTime: undefined, fpsCap: undefined, elapsed: undefined }
 var menuBackgroundValues = { backgroundXPos1: undefined, backgroundXPos2: undefined, scrollSpeed: 90}
@@ -30,7 +30,7 @@ var resourcePaths = [
 var layers = {
 	layerDictionary: {},
 	createLayer: function (layerName, layerWidth, layerHeight) {
-		if (!layerName in this.layerDictionary) {
+		if (!(layerName in this.layerDictionary)) {
 			console.log(`Creating a ${layerWidth}px by ${layerHeight}px layer named ${layerName}`)
 			this.layerDictionary[layerName] = new Layer(layerName, layerWidth, layerHeight)
 			this.layerDictionary[layerName].ctx.imageSmoothingEnabled = false
@@ -39,8 +39,8 @@ var layers = {
 		}
 	},
 	getLayer: function (layerName) {
-		layer = layers.layerDictionary[layerName];
-		if (typeof layer !== 'undefined') {
+		layer = this.layerDictionary[layerName];
+		if (typeof layer == 'undefined') {
 			throw `Layer "${layerName}" doesn't exist.`
 		} else {
 			return layer;
@@ -87,11 +87,71 @@ function init() {
 	}
 	resourcePaths = resourcePaths.concat(gameFont.gameFont1ResourcePaths)
 	resources.load(resourcePaths)
+	layers.createLayer("recolorFontLayer", 8, 8)
 	resources.onReady(function () { main() })
+	resources.onReady(function () {
+		gameFont.createRecolor(0, 0, "debugFont", [0, 0, 0], [255, 255, 255]);
+		gameFont.createRecolor(0, 0, "font", [255, 20, 147], [255, 255, 255]);
+		})
 }
 var gameFont = {
 	gameFont1ResourcePaths: [],
-	gameFont1String: "!().'-@+0123456789abcdefghijklmnopqrstuvwxyz"
+	gameFont1String: "!().'-@+0123456789abcdefghijklmnopqrstuvwxyz",
+	gameFont1ExtendedString: "!().'-@+0123456789abcdefghijklmnopqrstuvwxyz^*<>",
+	recolorDict: {},
+	createRecolor: function (style, type, fontName, color1, color2, color3 = [0, 0, 0]) {
+		if (style == 0) {
+			if (type == 0) {
+				let gameFontDict = {}
+				for (var i in this.gameFont1ExtendedString) {
+					gameFontDict[this.gameFont1ExtendedString.charAt(i)] = new Image(8, 8)
+					layers.getLayer("recolorFontLayer").ctx.clearRect(0, 0, 8, 8)
+					layers.getLayer("recolorFontLayer").ctx.drawImage(resources.get(this.gameFont1ResourcePaths[i * 2]), 0, 0)
+					var imageData = layers.getLayer("recolorFontLayer").ctx.getImageData(0, 0, 8, 8)
+					for (let y = 0; y < 8; y++) {
+						for (let x = 0; x < 8; x++) {
+							let index = (x * 4) * 8 + (y * 4)
+							let red = imageData.data[index];
+							if (red == 0) {
+								imageData.data[index] = color1[0]
+								imageData.data[index + 1] = color1[1]
+								imageData.data[index + 2] = color1[2]
+							} else if (red == 248) {
+								imageData.data[index] = color2[0]
+								imageData.data[index + 1] = color2[1]
+								imageData.data[index + 2] = color2[2]
+							}
+						}
+					}
+					console.log(`recolored: ${this.gameFont1ExtendedString[i]} ${i}`)
+					layers.getLayer("recolorFontLayer").ctx.putImageData(imageData, 0, 0, 0, 0, 8, 8)
+					gameFontDict[this.gameFont1ExtendedString.charAt(i)].src = layers.getLayer("recolorFontLayer").canvas.toDataURL()
+				}
+				this.recolorDict[fontName] = gameFontDict
+			}
+		}
+	},
+	drawText: function (ctx, fontName, string, x, y) {
+		let fontDictionary = this.recolorDict[fontName]
+		string = string.toLowerCase()
+		var xOffset = 0;
+		for (let i in string) {
+			if (string.charAt(i) == " ") {
+				xOffset += 8
+			} else if (string.charAt(i) == "^") {
+				xOffset += 4
+				ctx.drawImage(fontDictionary["^"], x + xOffset, y - 4)
+				ctx.drawImage(fontDictionary["<"], x + xOffset, y + 4)
+				xOffset += 8
+				ctx.drawImage(fontDictionary["*"], x + xOffset, y - 4)
+				ctx.drawImage(fontDictionary[">"], x + xOffset, y + 4)
+				xOffset += 4
+			} else {
+				ctx.drawImage(fontDictionary[string.charAt(i)], x + xOffset, y)
+				xOffset += 8
+			}
+		}
+	}
 }
 function main() {
 	window.requestAnimationFrame(main)
@@ -100,7 +160,7 @@ function main() {
 	fps.presentTime = performance.now()
 	fps.framesPerSecond = (fps.framesPerSecond * fps.fpsSmoothing) + ((1.0 / fps.deltaTime) * (1 - fps.fpsSmoothing))
 	if (clock.elapsed >= clock.frameInterval) {
-		fps.deltaTime = (fps.presentTime - fps.pastTime) / 1000
+		fps.deltaTime = (fps.presentTime - fps.pastTime) / 1000.0
 		clock.then = clock.now - (clock.elapsed % clock.frameInterval)
 		if (game.gameState == "menu_screen") {
 			if (!mainMenu.initialized) {
@@ -116,8 +176,24 @@ function main() {
 			ctx.drawImage(resources.get("sprites/title_screen/title_background.png"), menuBackgroundValues.backgroundXPos2, 0)
 			ctx.drawImage(resources.get("sprites/title_screen/int_game_title.png"), 11, 25)
 			ctx.drawImage(resources.get("sprites/title_screen/title_credits.png"), 84, 199)
-			
+			if (mainMenu.sinceStart <= 4000 && game.subGameState === "nintendo") {
+				ctx.globalAlpha = 2 - 0.0005 * mainMenu.sinceStart
+				drawRect(ctx, 0, 0, WIDTH, HEIGHT, true, [0, 0, 0])
+				ctx.globalAlpha = 1
+				if (mainMenu.sinceStart <= 2000) {
+					ctx.globalAlpha = 1 - 0.0005 * mainMenu.sinceStart
+					ctx.drawImage(resources.get("sprites/nintendo_logo.png"), 99, 113)
+					ctx.globalAlpha = 1
+				}
+			} else if (game.subGameState === "nintendo") {
+				game.subGameState = "title"
+			}
 		} else if (game.gameState == "game_screen") {
+		}
+		if (game.debug) {
+			gameFont.drawText(ctx, "debugFont", "FPS-" + Math.round(fps.framesPerSecond), 0, 0)
+			gameFont.drawText(ctx, "debugFont", "gamestate-" + game.gameState.replace("_", "."), 0, 8)
+			gameFont.drawText(ctx, "debugFont", "subgamestate-" + game.subGameState.replace("_", "."), 0, 16)
 		}
 		fps.pastTime = performance.now()
 	}
@@ -200,6 +276,7 @@ function clearCanvas(context) {
 function onKeyDown(event) {
 	console.log(event)
 	if (event.keyCode == controlBinds.debug && !event.repeat) {
+		game.debug = !game.debug
 	}
 	if (event.keyCode == controlBinds.up && !controlBooleans.up) { // UP
 	}
