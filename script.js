@@ -20,6 +20,7 @@ var menuBackgroundValues = { backgroundXPos1: undefined, backgroundXPos2: undefi
 var controlBooleans = { up: false, down: false, right: false, left: false, b: false, a: false, x: false, y: false, start: false, select: false, l: false, r: false }
 var controlBinds = { debug: 77, up: 38, left: 37, down: 40, right: 39, b: 67, a: 86, y: 88, x: 68, start: 32, select: 13, l: 65, r: 83 }
 var mainMenu = {startTime: 0, initialized: false, sinceStart: 0}
+var raceSetupValues = {playerCount: 0}
 var resourcePaths = [
 	'sprites/nintendo_logo.png',
 	'sprites/title_screen/title_background.png',
@@ -217,6 +218,11 @@ function main() {
 				gameFont.drawText(ctx, "pinkGloss", "2", 100, 144)
 				gameFont.drawText(ctx, "blue", "p game", 108, 128)
 				gameFont.drawText(ctx, "pink", "p game", 108, 144)
+				if (raceSetupValues.playerCount == 0) {
+					ctx.drawImage(resources.get("sprites/title_screen/selector_mushroom.png"), 83, 127)
+				} else {
+					ctx.drawImage(resources.get("sprites/title_screen/selector_mushroom.png"), 83, 127)
+				}
 			}
 			if (mainMenu.sinceStart <= 4000 && game.subGameState === "nintendo") {
 				ctx.globalAlpha = 2 - 0.0005 * mainMenu.sinceStart
@@ -321,10 +327,20 @@ function onKeyDown(event) {
 		game.debug = !game.debug
 	}
 	if (event.keyCode == controlBinds.up && !controlBooleans.up) { // UP
+		if (game.gameState == "menu_screen") {
+			if (game.subGameState == "player_select") {
+				raceSetupValues.playerCount = mod(raceSetupValues.playerCount - 1, 2)
+			}
+		}
 	}
 	if (event.keyCode == controlBinds.left && !controlBooleans.left) { // LEFT
 	}
 	if (event.keyCode == controlBinds.down && !controlBooleans.down) { // DOWN
+		if (game.gameState == "menu_screen") {
+			if (game.subGameState == "player_select") {
+				raceSetupValues.playerCount = mod(raceSetupValues.playerCount + 1, 2)
+			}
+		}
 	}
 	if (event.keyCode == controlBinds.right && !controlBooleans.right) { // RIGHT
 	}
@@ -434,9 +450,6 @@ function hexToRgb(hex) {
 	var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
 	return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : null;
 };
-function mod(n, m) {
-	return ((n % m) + m) % m;
-}
 
 /*
 	drawRect is a function that draws a rectangle on a specified canvas
@@ -471,7 +484,9 @@ function drawText(context, x, y, text, size, color, name) {
 	context.font = size + "px " + name
 	context.fillText(text, x, y)
 };
-
+function mod(n, m) {
+	return ((n % m) + m) % m;
+}
 window.addEventListener("keydown", onKeyDown, false); // an event listener for when the user presses down on a keyboard key
 window.addEventListener("keyup", onKeyUp, false); // an event listener for when the user lifts up off a keyboard key
 window.addEventListener("load", init, false); // an event listener for when the page and all it's code, calls the "initialize" function
