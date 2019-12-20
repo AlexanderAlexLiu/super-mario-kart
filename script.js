@@ -88,11 +88,11 @@ function init() {
 	resourcePaths = resourcePaths.concat(gameFont.gameFont1ResourcePaths)
 	resources.load(resourcePaths)
 	layers.createLayer("recolorFontLayer", 8, 8)
-	resources.onReady(function () { main() })
 	resources.onReady(function () {
 		gameFont.createRecolor(0, 0, "debugFont", [0, 0, 0], [255, 255, 255]);
-		gameFont.createRecolor(0, 0, "font", [255, 20, 147], [255, 255, 255]);
+		gameFont.createRecolor(0, 0, "font", [255, 20, 147], [255, 255, 255])
 		})
+	resources.onReady(function () { main() })
 }
 var gameFont = {
 	gameFont1ResourcePaths: [],
