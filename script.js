@@ -206,17 +206,18 @@ function main() {
 			if (game.subGameState != "player_select") {
 				menuBackgroundValues.backgroundXPos1 = -((mainMenu.sinceStart / 1000 * menuBackgroundValues.scrollSpeed) % WIDTH)
 				menuBackgroundValues.backgroundXPos2 = WIDTH - ((mainMenu.sinceStart / 1000 * menuBackgroundValues.scrollSpeed) % WIDTH)
-			} else if (game.subGameState == "player_select") {
+			}
+			ctx.drawImage(resources.get("sprites/title_screen/title_background.png"), menuBackgroundValues.backgroundXPos1, 0)
+			ctx.drawImage(resources.get("sprites/title_screen/title_background.png"), menuBackgroundValues.backgroundXPos2, 0)
+			ctx.drawImage(resources.get("sprites/title_screen/int_game_title.png"), 11, 25)
+			ctx.drawImage(resources.get("sprites/title_screen/title_credits.png"), 84, 199)
+			if (game.subGameState == "player_select") {
 				drawRect(ctx, 64, 120, 125, 40, true, "#000000")
 				gameFont.drawText(ctx, "blueGloss", "1", 100, 128)
 				gameFont.drawText(ctx, "pinkGloss", "2", 100, 144)
 				gameFont.drawText(ctx, "blue", "p game", 108, 128)
 				gameFont.drawText(ctx, "pink", "p game", 108, 144)
 			}
-			ctx.drawImage(resources.get("sprites/title_screen/title_background.png"), menuBackgroundValues.backgroundXPos1, 0)
-			ctx.drawImage(resources.get("sprites/title_screen/title_background.png"), menuBackgroundValues.backgroundXPos2, 0)
-			ctx.drawImage(resources.get("sprites/title_screen/int_game_title.png"), 11, 25)
-			ctx.drawImage(resources.get("sprites/title_screen/title_credits.png"), 84, 199)
 			if (mainMenu.sinceStart <= 4000 && game.subGameState === "nintendo") {
 				ctx.globalAlpha = 2 - 0.0005 * mainMenu.sinceStart
 				drawRect(ctx, 0, 0, WIDTH, HEIGHT, true, [0, 0, 0])
