@@ -137,7 +137,7 @@ var gameFont = {
 				for (var i in this.gameFont1ExtendedString) {
 					gameFontDict[this.gameFont1ExtendedString.charAt(i)] = new Image(8, 8)
 					layers.getLayer("recolorFontLayer").ctx.clearRect(0, 0, 8, 8)
-					layers.getLayer("recolorFontLayer").ctx.drawImage(resources.get(this.gameFont1ResourcePaths[i * 2]), 0, 0)
+					layers.getLayer("recolorFontLayer").ctx.drawImage(resources.get(this.gameFont1ResourcePaths[i * 2 + 1]), 0, 0)
 					var imageData = layers.getLayer("recolorFontLayer").ctx.getImageData(0, 0, 8, 8)
 					for (let y = 0; y < 8; y++) {
 						for (let x = 0; x < 8; x++) {
