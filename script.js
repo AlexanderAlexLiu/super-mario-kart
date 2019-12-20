@@ -207,7 +207,7 @@ function main() {
 				menuBackgroundValues.backgroundXPos1 = -((mainMenu.sinceStart / 1000 * menuBackgroundValues.scrollSpeed) % WIDTH)
 				menuBackgroundValues.backgroundXPos2 = WIDTH - ((mainMenu.sinceStart / 1000 * menuBackgroundValues.scrollSpeed) % WIDTH)
 			} else if (game.subGameState == "player_select") {
-				drawRect(ctx, 64, 120, 125, 40, true, [0, 0, 0])
+				drawRect(ctx, 64, 120, 125, 40, true, "#000000")
 				gameFont.drawText(ctx, "blueGloss", "1", 100, 128)
 				gameFont.drawText(ctx, "pinkGloss", "2", 100, 144)
 				gameFont.drawText(ctx, "blue", "p game", 108, 128)
@@ -329,8 +329,8 @@ function onKeyDown(event) {
 	}
 	if (event.keyCode == controlBinds.b && !controlBooleans.b) { // C to B
 		if (game.gameState == "menu_screen") {
-			if (game.gameState == "title") {
-				game.gameState = "player_select"
+			if (game.subGameState == "title") {
+				game.subGameState = "player_select"
 			}
 		}
 	}
@@ -342,8 +342,8 @@ function onKeyDown(event) {
 	}
 	if (event.keyCode == controlBinds.start && !controlBooleans.start) { // Space to Start
 		if (game.gameState == "menu_screen") {
-			if (game.gameState == "title") {
-				game.gameState = "player_select"
+			if (game.subGameState == "title") {
+				game.subGameState = "player_select"
 			}
 		}
 	}
