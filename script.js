@@ -90,7 +90,11 @@ function init() {
 	layers.createLayer("recolorFontLayer", 8, 8)
 	resources.onReady(function () {
 		gameFont.createRecolor(0, 0, "debugFont", [0, 0, 0], [255, 255, 255]);
-		gameFont.createRecolor(0, 0, "font", [255, 20, 147], [255, 255, 255])
+		gameFont.createRecolor(0, 0, "font", [255, 20, 147], [255, 255, 255]);
+		gameFont.createRecolor(0, 0, "blue", [0, 104, 248], [248, 248, 248])
+		gameFont.createRecolor(0, 0, "pink", [208, 0, 208], [248, 248, 248])
+		gameFont.createRecolor(0, 1, "blueGloss", [0, 104, 248], [248, 248, 248], [200, 200, 232])
+		gameFont.createRecolor(0, 1, "pinkGloss", [208, 0, 208], [248, 248, 248], [200, 200, 232])
 		})
 	resources.onReady(function () { main() })
 }
@@ -120,6 +124,37 @@ var gameFont = {
 								imageData.data[index] = color2[0]
 								imageData.data[index + 1] = color2[1]
 								imageData.data[index + 2] = color2[2]
+							}
+						}
+					}
+					console.log(`recolored: ${this.gameFont1ExtendedString[i]} ${i}`)
+					layers.getLayer("recolorFontLayer").ctx.putImageData(imageData, 0, 0, 0, 0, 8, 8)
+					gameFontDict[this.gameFont1ExtendedString.charAt(i)].src = layers.getLayer("recolorFontLayer").canvas.toDataURL()
+				}
+				this.recolorDict[fontName] = gameFontDict
+			} else if (type == 1) {
+				let gameFontDict = {}
+				for (var i in this.gameFont1ExtendedString) {
+					gameFontDict[this.gameFont1ExtendedString.charAt(i)] = new Image(8, 8)
+					layers.getLayer("recolorFontLayer").ctx.clearRect(0, 0, 8, 8)
+					layers.getLayer("recolorFontLayer").ctx.drawImage(resources.get(this.gameFont1ResourcePaths[i * 2]), 0, 0)
+					var imageData = layers.getLayer("recolorFontLayer").ctx.getImageData(0, 0, 8, 8)
+					for (let y = 0; y < 8; y++) {
+						for (let x = 0; x < 8; x++) {
+							let index = (x * 4) * 8 + (y * 4)
+							let red = imageData.data[index];
+							if (red == 0) {
+								imageData.data[index] = color1[0]
+								imageData.data[index + 1] = color1[1]
+								imageData.data[index + 2] = color1[2]
+							} else if (red == 248) {
+								imageData.data[index] = color2[0]
+								imageData.data[index + 1] = color2[1]
+								imageData.data[index + 2] = color2[2]
+							} else if (red == 200) {
+								imageData.data[index] = color3[0]
+								imageData.data[index + 1] = color3[1]
+								imageData.data[index + 2] = color3[2]
 							}
 						}
 					}
@@ -171,6 +206,12 @@ function main() {
 			if (game.subGameState != "player_select") {
 				menuBackgroundValues.backgroundXPos1 = -((mainMenu.sinceStart / 1000 * menuBackgroundValues.scrollSpeed) % WIDTH)
 				menuBackgroundValues.backgroundXPos2 = WIDTH - ((mainMenu.sinceStart / 1000 * menuBackgroundValues.scrollSpeed) % WIDTH)
+			} else if (game.subGameState == "player_select") {
+				drawRect(ctx, 64, 120, 125, 40, true, [0, 0, 0])
+				gameFont.drawText(ctx, "blueGloss", "1", 100, 128)
+				gameFont.drawText(ctx, "pinkGloss", "2", 100, 144)
+				gameFont.drawText(ctx, "blue", "p game", 108, 128)
+				gameFont.drawText(ctx, "pink", "p game", 108, 144)
 			}
 			ctx.drawImage(resources.get("sprites/title_screen/title_background.png"), menuBackgroundValues.backgroundXPos1, 0)
 			ctx.drawImage(resources.get("sprites/title_screen/title_background.png"), menuBackgroundValues.backgroundXPos2, 0)
@@ -287,6 +328,11 @@ function onKeyDown(event) {
 	if (event.keyCode == controlBinds.right && !controlBooleans.right) { // RIGHT
 	}
 	if (event.keyCode == controlBinds.b && !controlBooleans.b) { // C to B
+		if (game.gameState == "menu_screen") {
+			if (game.gameState == "title") {
+				game.gameState = "player_select"
+			}
+		}
 	}
 	if (event.keyCode == controlBinds.a && !controlBooleans.a) { // V to A
 	}
@@ -295,6 +341,11 @@ function onKeyDown(event) {
 	if (event.keyCode == controlBinds.x && !controlBooleans.x) { // D to X
 	}
 	if (event.keyCode == controlBinds.start && !controlBooleans.start) { // Space to Start
+		if (game.gameState == "menu_screen") {
+			if (game.gameState == "title") {
+				game.gameState = "player_select"
+			}
+		}
 	}
 	if (event.keyCode == controlBinds.select && !controlBooleans.select) { // Enter to Select
 	}
