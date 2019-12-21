@@ -221,7 +221,7 @@ function main() {
 				if (raceSetupValues.playerCount == 0) {
 					ctx.drawImage(resources.get("sprites/title_screen/selector_mushroom.png"), 83, 127)
 				} else {
-					ctx.drawImage(resources.get("sprites/title_screen/selector_mushroom.png"), 83, 127)
+					ctx.drawImage(resources.get("sprites/title_screen/selector_mushroom.png"), 83, 143)
 				}
 			}
 			if (mainMenu.sinceStart <= 4000 && game.subGameState === "nintendo") {
