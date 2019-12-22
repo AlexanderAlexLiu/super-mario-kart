@@ -13,7 +13,7 @@ var body // stores a Element object representing the HTML body
 var canvas // stores a Element object representing the element with the "display-surface" id
 var ctx  // stores the drawing context of whatever element the canvas variable has stored
 var WIDTH, HEIGHT // stores constants of the canvas's width and height respectively
-var game = { gameScale: 3, debug: false, gameState: "", subGameState: "" }
+var game = { gameScale: 2, debug: false, gameState: "", subGameState: "" }
 var fps = { deltaTime: 1, pastTime: 0, presentTime: 0, framesPerSecond: 0, fpsSmoothing: 0.9 }
 var clock = { frameInterval: undefined, then: undefined, now: undefined, startTime: undefined, fpsCap: undefined, elapsed: undefined }
 var menuBackgroundValues = { backgroundXPos1: undefined, backgroundXPos2: undefined, scrollSpeed: 90}
