@@ -28,7 +28,9 @@ var resourcePaths = [
 	'sprites/title_screen/int_game_title.png',
 	'sprites/title_screen/title_credits.png',
 	'sprites/title_screen/selector_mushroom.png',
-	'sprites/character_screen/frame.png'
+	'sprites/character_screen/frame.png',
+	"sprites/character_screen/banner.png",
+	"sprites/character_screen/select_background.png"
 ]
 var layers = {
 	layerDictionary: {},
@@ -307,9 +309,17 @@ function main() {
 				characterMenu.startTime = performance.now()
 				characterMenu.init = true
 			}
+			ctx.drawImage(resources.get("sprites/character_screen/banner.png"), 176 - (((performance.now() - characterMenu.startTime) / 25) % 256), 23)
+			ctx.drawImage(resources.get("sprites/character_screen/select_background.png"), 37, 77)
+			ctx.drawImage(resources.get("sprites/character_screen/select_background.png"), 85, 77)
+			for (let y = 0; y < 2; y++) {
+				for (let x = 0; x < 4; x++) {
+					ctx.drawImage(resources.get("sprites/character_screen/select_background.png"), 37 + 48 * x, 71 + 64 * y)
+				}
+			}
 			ctx.drawImage(resources.get("sprites/character_screen/frame.png"), 0, -1)
-			if (performance.now() - characterMenu.startTime <= 2000) {
-				ctx.globalAlpha = 1 - 0.0005 * (performance.now() - characterMenu.startTime)
+			if (performance.now() - characterMenu.startTime <= 500) {
+				ctx.globalAlpha = 1 - 0.002 * (performance.now() - characterMenu.startTime)
 				drawRect(ctx, 0, 0, WIDTH, HEIGHT, true, [0, 0, 0])
 				ctx.globalAlpha = 1
 			}
@@ -322,6 +332,7 @@ function main() {
 		fps.pastTime = performance.now()
 	}
 };
+//https://gamedev.stackexchange.com/questions/24957/doing-an-snes-mode-7-affine-transform-effect-in-pygame
 /*	
 	copy pasted because I didn't feel like coding one on the spot.
 	might refactor to be more readable
