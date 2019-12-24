@@ -19,14 +19,16 @@ var clock = { frameInterval: undefined, then: undefined, now: undefined, startTi
 var menuBackgroundValues = { backgroundXPos1: undefined, backgroundXPos2: undefined, scrollSpeed: 90}
 var controlBooleans = { up: false, down: false, right: false, left: false, b: false, a: false, x: false, y: false, start: false, select: false, l: false, r: false }
 var controlBinds = { debug: 77, up: 38, left: 37, down: 40, right: 39, b: 67, a: 86, y: 88, x: 68, start: 32, select: 13, l: 65, r: 83 }
-var mainMenu = {startTime: 0, initialized: false, sinceStart: 0}
-var raceSetupValues = {playerCount: 0}
+var mainMenu = {startTime: 0, initialized: false, sinceStart: 0, fadeOutStart: 0, fadeOutInit: false}
+var raceSetupValues = {playerCount: 0, mode: 0, speed: 0, ok: 0}
+var characterMenu = {startTime: 0, init: false}
 var resourcePaths = [
 	'sprites/nintendo_logo.png',
 	'sprites/title_screen/title_background.png',
 	'sprites/title_screen/int_game_title.png',
 	'sprites/title_screen/title_credits.png',
-	'sprites/title_screen/selector_mushroom.png'
+	'sprites/title_screen/selector_mushroom.png',
+	'sprites/character_screen/frame.png'
 ]
 var layers = {
 	layerDictionary: {},
@@ -175,7 +177,7 @@ var gameFont = {
 			if (string.charAt(i) == " ") {
 				xOffset += 8
 			} else if (string.charAt(i) == "^") {
-				xOffset += 4
+				xOffset -= 4
 				ctx.drawImage(fontDictionary["^"], x + xOffset, y - 4)
 				ctx.drawImage(fontDictionary["<"], x + xOffset, y + 4)
 				xOffset += 8
@@ -204,7 +206,7 @@ function main() {
 				mainMenu.initialized = true
 			}
 			mainMenu.sinceStart = performance.now() - mainMenu.startTime 
-			if (game.subGameState != "player_select") {
+			if (game.subGameState == "title" || game.subGameState == "nintendo") {
 				menuBackgroundValues.backgroundXPos1 = -((mainMenu.sinceStart / 1000 * menuBackgroundValues.scrollSpeed) % WIDTH)
 				menuBackgroundValues.backgroundXPos2 = WIDTH - ((mainMenu.sinceStart / 1000 * menuBackgroundValues.scrollSpeed) % WIDTH)
 			}
@@ -223,6 +225,70 @@ function main() {
 				} else {
 					ctx.drawImage(resources.get("sprites/title_screen/selector_mushroom.png"), 83, 143)
 				}
+			} else if (game.subGameState == "mode_select") {
+				drawRect(ctx, 64, 120, 125, 40, true, "#000000")
+				gameFont.drawText(ctx, "blue", "mariokart gp", 88, 128)
+				gameFont.drawText(ctx, "pink", "time trial", 88, 144)
+				if (raceSetupValues.mode == 0) {
+					ctx.drawImage(resources.get("sprites/title_screen/selector_mushroom.png"), 71, 127)
+				} else {
+					ctx.drawImage(resources.get("sprites/title_screen/selector_mushroom.png"), 71, 143)
+				}
+			} else if (game.subGameState == "speed_select") {
+				drawRect(ctx, 64, 120, 125, 40, true, "#000000")
+				gameFont.drawText(ctx, "blueGloss", "50", 92, 128)
+				gameFont.drawText(ctx, "blue", "^ class", 108, 128)
+				gameFont.drawText(ctx, "pinkGloss", "100", 92, 144)
+				gameFont.drawText(ctx, "pink", "^ class", 116, 144)
+				if (raceSetupValues.speed == 0) {
+					ctx.drawImage(resources.get("sprites/title_screen/selector_mushroom.png"), 75, 127)
+				} else {
+					ctx.drawImage(resources.get("sprites/title_screen/selector_mushroom.png"), 75, 143)
+				}
+			} else if (game.subGameState == "confirm_select") {
+				drawRect(ctx, 64, 112, 125, 86, true, "#000000")
+				ctx.drawImage(resources.get("sprites/title_screen/selector_mushroom.png"), 71, 119)
+				ctx.drawImage(resources.get("sprites/title_screen/selector_mushroom.png"), 71, 135)
+				ctx.drawImage(resources.get("sprites/title_screen/selector_mushroom.png"), 71, 151)
+				if (raceSetupValues.playerCount == 0) {
+					gameFont.drawText(ctx, "blueGloss", "1", 88, 120)
+					gameFont.drawText(ctx, "blue", "p game", 96, 120)
+				} else {
+					gameFont.drawText(ctx, "blueGloss", "2", 88, 120)
+					gameFont.drawText(ctx, "blue", "p game", 96, 120)
+				}
+				if (raceSetupValues.mode == 0) {
+					gameFont.drawText(ctx, "blue", "mariokart gp", 88, 136)
+				} else {
+					gameFont.drawText(ctx, "blue", "time trial", 88, 136)
+				}
+				if (raceSetupValues.speed == 0) {
+					gameFont.drawText(ctx, "blueGloss", "50", 88, 152)
+					gameFont.drawText(ctx, "blue", "^ class", 104, 152)
+				} else {
+					gameFont.drawText(ctx, "blueGloss", "100", 88, 152)
+					gameFont.drawText(ctx, "blue", "^ class", 112, 152)
+				}
+				gameFont.drawText(ctx, "pink", "is this ok+", 96, 168)
+				gameFont.drawText(ctx, "pink", "yes", 120, 184)
+				gameFont.drawText(ctx, "pink", "no", 160, 184)
+				if (raceSetupValues.ok == 0) {
+					gameFont.drawText(ctx, "blue", "(   )", 112, 184)
+				} else {
+					gameFont.drawText(ctx, "blue", "(  )", 152, 184)
+				}
+			} else if (game.subGameState == "fade_to_select") {
+				if (!mainMenu.fadeOutInit) {
+					mainMenu.fadeOutStart = performance.now()
+					mainMenu.fadeOutInit = true
+				}
+				if (performance.now() - mainMenu.fadeOutStart <= 1000) {
+					ctx.globalAlpha = 0.001 * (performance.now() - mainMenu.fadeOutStart)
+					drawRect(ctx, 0, 0, WIDTH, HEIGHT, true, [0, 0, 0])
+					ctx.globalAlpha = 0
+				} else {
+					game.gameState = "character_select"
+				}
 			}
 			if (mainMenu.sinceStart <= 4000 && game.subGameState === "nintendo") {
 				ctx.globalAlpha = 2 - 0.0005 * mainMenu.sinceStart
@@ -236,7 +302,17 @@ function main() {
 			} else if (game.subGameState === "nintendo") {
 				game.subGameState = "title"
 			}
-		} else if (game.gameState == "game_screen") {
+		} else if (game.gameState == "character_select") {
+			if (!characterMenu.init) {
+				characterMenu.startTime = performance.now()
+				characterMenu.init = true
+			}
+			ctx.drawImage(resources.get("sprites/character_screen/frame.png"), 0, -1)
+			if (performance.now() - characterMenu.startTime <= 2000) {
+				ctx.globalAlpha = 1 - 0.0005 * (performance.now() - characterMenu.startTime)
+				drawRect(ctx, 0, 0, WIDTH, HEIGHT, true, [0, 0, 0])
+				ctx.globalAlpha = 1
+			}
 		}
 		if (game.debug) {
 			gameFont.drawText(ctx, "debugFont", "FPS-" + Math.round(fps.framesPerSecond), 0, 0)
@@ -322,6 +398,7 @@ function clearCanvas(context) {
 	and processes it
 */
 function onKeyDown(event) {
+	// DON"T FORGET BATTLE MODE
 	console.log(event)
 	if (event.keyCode == controlBinds.debug && !event.repeat) {
 		game.debug = !game.debug
@@ -330,45 +407,103 @@ function onKeyDown(event) {
 		if (game.gameState == "menu_screen") {
 			if (game.subGameState == "player_select") {
 				raceSetupValues.playerCount = mod(raceSetupValues.playerCount - 1, 2)
+			} else if (game.subGameState == "mode_select") {
+				raceSetupValues.mode = mod(raceSetupValues.mode - 1, 2)
+			} else if (game.subGameState == "speed_select") {
+				raceSetupValues.speed = mod(raceSetupValues.speed - 1, 2)
+			} else if (game.subGameState == "confirm_select") {
+				raceSetupValues.ok = mod(raceSetupValues.ok - 1, 2)
 			}
 		}
+		controlBooleans.up = true
 	}
 	if (event.keyCode == controlBinds.left && !controlBooleans.left) { // LEFT
+		if (game.gameState == "menu_screen") {
+			if (game.subGameState == "confirm_select") {
+				raceSetupValues.ok = mod(raceSetupValues.ok + 1, 2)
+			}
+		}
+		controlBooleans.left = true
 	}
 	if (event.keyCode == controlBinds.down && !controlBooleans.down) { // DOWN
 		if (game.gameState == "menu_screen") {
 			if (game.subGameState == "player_select") {
 				raceSetupValues.playerCount = mod(raceSetupValues.playerCount + 1, 2)
+			} else if (game.subGameState == "mode_select") {
+				raceSetupValues.mode = mod(raceSetupValues.mode + 1, 2)
+			} else if (game.subGameState == "speed_select") {
+				raceSetupValues.speed = mod(raceSetupValues.speed + 1, 2)
 			}
 		}
+		controlBooleans.down = true
 	}
 	if (event.keyCode == controlBinds.right && !controlBooleans.right) { // RIGHT
+		if (game.gameState == "menu_screen") {
+			if (game.subGameState == "confirm_select") {
+				raceSetupValues.ok = mod(raceSetupValues.ok + 1, 2)
+			}
+		}
+		controlBooleans.right = true
 	}
 	if (event.keyCode == controlBinds.b && !controlBooleans.b) { // C to B
 		if (game.gameState == "menu_screen") {
 			if (game.subGameState == "title") {
 				game.subGameState = "player_select"
+			} else if (game.subGameState == "player_select") {
+				game.subGameState = "mode_select"
+			} else if (game.subGameState == "mode_select") {
+				game.subGameState = "speed_select"
+			} else if (game.subGameState == "speed_select") {
+				game.subGameState = "confirm_select"
+			} else if (game.subGameState == "confirm_select") {
+				if (raceSetupValues.ok == 1) {
+					game.subGameState = "title"
+					raceSetupValues = {playerCount: 0, mode: 0, speed: 0, ok: 0}
+				} else {
+					game.subGameState = "fade_to_select"
+				}
 			}
 		}
+		controlBooleans.b = true
 	}
 	if (event.keyCode == controlBinds.a && !controlBooleans.a) { // V to A
+		controlBooleans.a = true
 	}
 	if (event.keyCode == controlBinds.y && !controlBooleans.y) { // X to Y
+		controlBooleans.y = true
 	}
 	if (event.keyCode == controlBinds.x && !controlBooleans.x) { // D to X
+		controlBooleans.x = true
 	}
 	if (event.keyCode == controlBinds.start && !controlBooleans.start) { // Space to Start
 		if (game.gameState == "menu_screen") {
 			if (game.subGameState == "title") {
 				game.subGameState = "player_select"
+			} else if (game.subGameState == "player_select") {
+				game.subGameState = "mode_select"
+			} else if (game.subGameState == "mode_select") {
+				game.subGameState = "speed_select"
+			} else if (game.subGameState == "speed_select") {
+				game.subGameState = "confirm_select"
+			} else if (game.subGameState == "confirm_select") {
+				if (raceSetupValues.ok == 1) {
+					game.subGameState = "title"
+					raceSetupValues = {playerCount: 0, mode: 0, speed: 0, ok: 0}
+				} else {
+					game.subGameState = "fade_to_select"
+				}
 			}
 		}
+		controlBooleans.start = true
 	}
 	if (event.keyCode == controlBinds.select && !controlBooleans.select) { // Enter to Select
+		controlBooleans.select = true
 	}
 	if (event.keyCode == controlBinds.l && !controlBooleans.l) { // A to L
+		controlBooleans.l = true
 	}
 	if (event.keyCode == controlBinds.r && !controlBooleans.r) { // S to R
+		controlBooleans.r = true
 	}
 };
 
@@ -378,31 +513,43 @@ function onKeyDown(event) {
 */
 function onKeyUp(event) {
 	console.log(event)
-	if (event.keyCode == controlBinds.debug && !event.repeat) {
+	if (event.keyCode == controlBinds.debug && event.repeat) {
 	}
-	if (event.keyCode == controlBinds.up && !controlBooleans.up) { // UP
+	if (event.keyCode == controlBinds.up && controlBooleans.up) { // UP
+		controlBooleans.up = false
 	}
-	if (event.keyCode == controlBinds.left && !controlBooleans.left) { // LEFT
+	if (event.keyCode == controlBinds.left && controlBooleans.left) { // LEFT
+		controlBooleans.left = false
 	}
-	if (event.keyCode == controlBinds.down && !controlBooleans.down) { // DOWN
+	if (event.keyCode == controlBinds.down && controlBooleans.down) { // DOWN
+		controlBooleans.down = false
 	}
-	if (event.keyCode == controlBinds.right && !controlBooleans.right) { // RIGHT
+	if (event.keyCode == controlBinds.right && controlBooleans.right) { // RIGHT
+		controlBooleans.right = false
 	}
-	if (event.keyCode == controlBinds.b && !controlBooleans.b) { // C to B
+	if (event.keyCode == controlBinds.b && controlBooleans.b) { // C to B
+		controlBooleans.b = false
 	}
-	if (event.keyCode == controlBinds.a && !controlBooleans.a) { // V to A
+	if (event.keyCode == controlBinds.a && controlBooleans.a) { // V to A
+		controlBooleans.a = false
 	}
-	if (event.keyCode == controlBinds.y && !controlBooleans.y) { // X to Y
+	if (event.keyCode == controlBinds.y && controlBooleans.y) { // X to Y
+		controlBooleans.y = false
 	}
-	if (event.keyCode == controlBinds.x && !controlBooleans.x) { // D to X
+	if (event.keyCode == controlBinds.x && controlBooleans.x) { // D to X
+		controlBooleans.x = false
 	}
-	if (event.keyCode == controlBinds.start && !controlBooleans.start) { // Space to Start
+	if (event.keyCode == controlBinds.start && controlBooleans.start) { // Space to Start
+		controlBooleans.start = false
 	}
-	if (event.keyCode == controlBinds.select && !controlBooleans.select) { // Enter to Select
+	if (event.keyCode == controlBinds.select && controlBooleans.select) { // Enter to Select
+		controlBooleans.select = false
 	}
-	if (event.keyCode == controlBinds.l && !controlBooleans.l) { // A to L
+	if (event.keyCode == controlBinds.l && controlBooleans.l) { // A to L
+		controlBooleans.l = false
 	}
-	if (event.keyCode == controlBinds.r && !controlBooleans.r) { // S to R
+	if (event.keyCode == controlBinds.r && controlBooleans.r) { // S to R
+		controlBooleans.r = false
 	}
 };
 
