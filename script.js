@@ -21,7 +21,8 @@ var controlBooleans = { up: false, down: false, right: false, left: false, b: fa
 var controlBinds = { debug: 77, up: 38, left: 37, down: 40, right: 39, b: 67, a: 86, y: 88, x: 68, start: 32, select: 13, l: 65, r: 83 }
 var mainMenu = {startTime: 0, initialized: false, sinceStart: 0, fadeOutStart: 0, fadeOutInit: false}
 var raceSetupValues = {playerCount: 0, mode: 0, speed: 0, ok: 0}
-var characterMenu = {startTime: 0, init: false}
+var characterMenu = {startTime: 0, init: false, character: 0, isSelected: false, flash: 0}
+var characterLayers = ["character0", "character1", "character2", "character3", "character4", "character5", "character6", "character7"]
 var resourcePaths = [
 	'sprites/nintendo_logo.png',
 	'sprites/title_screen/title_background.png',
@@ -30,7 +31,8 @@ var resourcePaths = [
 	'sprites/title_screen/selector_mushroom.png',
 	'sprites/character_screen/frame.png',
 	"sprites/character_screen/banner.png",
-	"sprites/character_screen/select_background.png"
+	"sprites/character_screen/select_background.png",
+	"sprites/character_screen/player_1_select.png"
 ]
 var layers = {
 	layerDictionary: {},
@@ -93,6 +95,15 @@ function init() {
 	resourcePaths = resourcePaths.concat(gameFont.gameFont1ResourcePaths)
 	resources.load(resourcePaths)
 	layers.createLayer("recolorFontLayer", 8, 8)
+	// character layers?
+	layers.createLayer("character0", 35, 38)
+	layers.createLayer("character1", 35, 38)
+	layers.createLayer("character2", 35, 38)
+	layers.createLayer("character3", 35, 38)
+	layers.createLayer("character4", 35, 38)
+	layers.createLayer("character5", 35, 38)
+	layers.createLayer("character6", 35, 38)
+	layers.createLayer("character7", 35, 38)
 	resources.onReady(function () {
 		gameFont.createRecolor(0, 0, "debugFont", [0, 0, 0], [255, 255, 255]);
 		gameFont.createRecolor(0, 0, "font", [255, 20, 147], [255, 255, 255]);
@@ -306,18 +317,55 @@ function main() {
 			}
 		} else if (game.gameState == "character_select") {
 			if (!characterMenu.init) {
-				characterMenu.startTime = performance.now()
+				characterMenu.startTime = Math.floor(performance.now())
 				characterMenu.init = true
 			}
 			ctx.drawImage(resources.get("sprites/character_screen/banner.png"), 176 - (((performance.now() - characterMenu.startTime) / 25) % 256), 23)
 			ctx.drawImage(resources.get("sprites/character_screen/select_background.png"), 37, 77)
 			ctx.drawImage(resources.get("sprites/character_screen/select_background.png"), 85, 77)
+			characterLayers.forEach(
+				layerName => {
+					if (!(characterMenu.isSelected && characterMenu.character == layerName.charAt(9))) {
+						layers.getLayer(layerName).ctx.drawImage(resources.get("sprites/character_screen/select_background.png"), 0 - (((performance.now() - characterMenu.startTime) / 12) % 49), -6);
+						layers.getLayer(layerName).ctx.drawImage(resources.get("sprites/character_screen/select_background.png"), 48 - (((performance.now() - characterMenu.startTime) / 12) % 49), -6)	
+					}
+				}
+			)
 			for (let y = 0; y < 2; y++) {
 				for (let x = 0; x < 4; x++) {
-					ctx.drawImage(resources.get("sprites/character_screen/select_background.png"), 37 + 48 * x, 71 + 64 * y)
+					ctx.drawImage(layers.getLayer(`character${x + (y * 4)}`).canvas, 37 + 48 * x, 77 + 64 * y)
 				}
 			}
 			ctx.drawImage(resources.get("sprites/character_screen/frame.png"), 0, -1)
+			characterMenu.flash = (characterMenu.flash + 1) % 4
+			if (!characterMenu.flash == 0) {
+				switch (characterMenu.character) {
+					case 0:
+						ctx.drawImage(resources.get("sprites/character_screen/player_1_select.png"), 48, 63)
+						break;
+					case 1:
+						ctx.drawImage(resources.get("sprites/character_screen/player_1_select.png"), 96, 63)
+						break;
+					case 2:
+						ctx.drawImage(resources.get("sprites/character_screen/player_1_select.png"), 144, 63)
+						break;
+					case 3:
+						ctx.drawImage(resources.get("sprites/character_screen/player_1_select.png"), 192, 63)
+						break;
+					case 4:
+						ctx.drawImage(resources.get("sprites/character_screen/player_1_select.png"), 48, 127)
+						break;
+					case 5:
+						ctx.drawImage(resources.get("sprites/character_screen/player_1_select.png"), 96, 127)
+						break;
+					case 6:
+						ctx.drawImage(resources.get("sprites/character_screen/player_1_select.png"), 144, 127)
+						break;
+					case 7:
+						ctx.drawImage(resources.get("sprites/character_screen/player_1_select.png"), 192, 127)
+						break;
+				}
+			}
 			if (performance.now() - characterMenu.startTime <= 500) {
 				ctx.globalAlpha = 1 - 0.002 * (performance.now() - characterMenu.startTime)
 				drawRect(ctx, 0, 0, WIDTH, HEIGHT, true, [0, 0, 0])
@@ -425,6 +473,8 @@ function onKeyDown(event) {
 			} else if (game.subGameState == "confirm_select") {
 				raceSetupValues.ok = mod(raceSetupValues.ok - 1, 2)
 			}
+		} else if (game.gameState == "character_select") {
+			characterMenu.character = mod(characterMenu.character - 4, 8) 
 		}
 		controlBooleans.up = true
 	}
@@ -433,6 +483,8 @@ function onKeyDown(event) {
 			if (game.subGameState == "confirm_select") {
 				raceSetupValues.ok = mod(raceSetupValues.ok + 1, 2)
 			}
+		} else if (game.gameState == "character_select") {
+			characterMenu.character = mod(characterMenu.character - 1, 8) 
 		}
 		controlBooleans.left = true
 	}
@@ -445,6 +497,8 @@ function onKeyDown(event) {
 			} else if (game.subGameState == "speed_select") {
 				raceSetupValues.speed = mod(raceSetupValues.speed + 1, 2)
 			}
+		} else if (game.gameState == "character_select") {
+			characterMenu.character = mod(characterMenu.character + 4, 8) 
 		}
 		controlBooleans.down = true
 	}
@@ -453,6 +507,8 @@ function onKeyDown(event) {
 			if (game.subGameState == "confirm_select") {
 				raceSetupValues.ok = mod(raceSetupValues.ok + 1, 2)
 			}
+		} else if (game.gameState == "character_select") {
+			characterMenu.character = mod(characterMenu.character + 1, 8) 
 		}
 		controlBooleans.right = true
 	}
