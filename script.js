@@ -21,7 +21,7 @@ var controlBooleans = { up: false, down: false, right: false, left: false, b: fa
 var controlBinds = { debug: 77, up: 38, left: 37, down: 40, right: 39, b: 67, a: 86, y: 88, x: 68, start: 32, select: 13, l: 65, r: 83 }
 var mainMenu = {startTime: 0, initialized: false, sinceStart: 0, fadeOutStart: 0, fadeOutInit: false}
 var raceSetupValues = {playerCount: 0, mode: 0, speed: 0, ok: 0}
-var characterMenu = {startTime: 0, init: false, character: 0, isSelected: false, flash: 0}
+var characterMenu = {startTime: 0, init: false, character: 0, isSelected: false, flash: 0, characterAngle: 90, confirmSelect: false}
 var characterLayers = ["character0", "character1", "character2", "character3", "character4", "character5", "character6", "character7"]
 var resourcePaths = [
 	'sprites/nintendo_logo.png',
@@ -32,8 +32,11 @@ var resourcePaths = [
 	'sprites/character_screen/frame.png',
 	"sprites/character_screen/banner.png",
 	"sprites/character_screen/select_background.png",
-	"sprites/character_screen/player_1_select.png"
+	"sprites/character_screen/player_1_select.png",
+	"sprites/character_screen/p1_check.png",
+	"sprites/character_screen/p1_confirm.png"
 ]
+var player = {x: 0, y: 0, net_force: new Victor(0, 0), }
 var layers = {
 	layerDictionary: {},
 	createLayer: function (layerName, layerWidth, layerHeight) {
@@ -109,8 +112,11 @@ function init() {
 		gameFont.createRecolor(0, 0, "font", [255, 20, 147], [255, 255, 255]);
 		gameFont.createRecolor(0, 0, "blue", [0, 104, 248], [248, 248, 248])
 		gameFont.createRecolor(0, 0, "pink", [208, 0, 208], [248, 248, 248])
+		gameFont.createRecolor(0, 0, "magenta", [0, 0, 0], [255, 123, 231])
 		gameFont.createRecolor(0, 1, "blueGloss", [0, 104, 248], [248, 248, 248], [200, 200, 232])
 		gameFont.createRecolor(0, 1, "pinkGloss", [208, 0, 208], [248, 248, 248], [200, 200, 232])
+		gameFont.createRecolor(0, 0, "mapSelectFont", [0, 0, 0], [255, 255, 255]);
+		gameFont.createRecolor(0, 1, "mapSelectFontGloss", [0, 0, 0], [248, 248, 248], [206, 206, 239])
 		})
 	resources.onReady(function () { main() })
 }
@@ -204,6 +210,9 @@ var gameFont = {
 		}
 	}
 }
+function returnYoshi(angle) {
+	
+}
 function main() {
 	window.requestAnimationFrame(main)
 	clock.now = performance.now();
@@ -259,36 +268,63 @@ function main() {
 					ctx.drawImage(resources.get("sprites/title_screen/selector_mushroom.png"), 75, 143)
 				}
 			} else if (game.subGameState == "confirm_select") {
-				drawRect(ctx, 64, 112, 125, 86, true, "#000000")
-				ctx.drawImage(resources.get("sprites/title_screen/selector_mushroom.png"), 71, 119)
-				ctx.drawImage(resources.get("sprites/title_screen/selector_mushroom.png"), 71, 135)
-				ctx.drawImage(resources.get("sprites/title_screen/selector_mushroom.png"), 71, 151)
-				if (raceSetupValues.playerCount == 0) {
-					gameFont.drawText(ctx, "blueGloss", "1", 88, 120)
-					gameFont.drawText(ctx, "blue", "p game", 96, 120)
-				} else {
-					gameFont.drawText(ctx, "blueGloss", "2", 88, 120)
-					gameFont.drawText(ctx, "blue", "p game", 96, 120)
-				}
 				if (raceSetupValues.mode == 0) {
-					gameFont.drawText(ctx, "blue", "mariokart gp", 88, 136)
-				} else {
-					gameFont.drawText(ctx, "blue", "time trial", 88, 136)
-				}
-				if (raceSetupValues.speed == 0) {
-					gameFont.drawText(ctx, "blueGloss", "50", 88, 152)
-					gameFont.drawText(ctx, "blue", "^ class", 104, 152)
-				} else {
-					gameFont.drawText(ctx, "blueGloss", "100", 88, 152)
-					gameFont.drawText(ctx, "blue", "^ class", 112, 152)
-				}
-				gameFont.drawText(ctx, "pink", "is this ok+", 96, 168)
-				gameFont.drawText(ctx, "pink", "yes", 120, 184)
-				gameFont.drawText(ctx, "pink", "no", 160, 184)
-				if (raceSetupValues.ok == 0) {
-					gameFont.drawText(ctx, "blue", "(   )", 112, 184)
-				} else {
-					gameFont.drawText(ctx, "blue", "(  )", 152, 184)
+					drawRect(ctx, 64, 112, 125, 86, true, "#000000")
+					ctx.drawImage(resources.get("sprites/title_screen/selector_mushroom.png"), 71, 119)
+					ctx.drawImage(resources.get("sprites/title_screen/selector_mushroom.png"), 71, 135)
+					ctx.drawImage(resources.get("sprites/title_screen/selector_mushroom.png"), 71, 151)
+					if (raceSetupValues.playerCount == 0) {
+						gameFont.drawText(ctx, "blueGloss", "1", 88, 120)
+						gameFont.drawText(ctx, "blue", "p game", 96, 120)
+					} else {
+						gameFont.drawText(ctx, "blueGloss", "2", 88, 120)
+						gameFont.drawText(ctx, "blue", "p game", 96, 120)
+					}
+					if (raceSetupValues.mode == 0) {
+						gameFont.drawText(ctx, "blue", "mariokart gp", 88, 136)
+					} else {
+						gameFont.drawText(ctx, "blue", "time trial", 88, 136)
+					}
+					if (raceSetupValues.speed == 0) {
+						gameFont.drawText(ctx, "blueGloss", "50", 88, 152)
+						gameFont.drawText(ctx, "blue", "^ class", 104, 152)
+					} else {
+						gameFont.drawText(ctx, "blueGloss", "100", 88, 152)
+						gameFont.drawText(ctx, "blue", "^ class", 112, 152)
+					}
+					gameFont.drawText(ctx, "pink", "is this ok+", 96, 168)
+					gameFont.drawText(ctx, "pink", "yes", 120, 184)
+					gameFont.drawText(ctx, "pink", "no", 160, 184)
+					if (raceSetupValues.ok == 0) {
+						gameFont.drawText(ctx, "blue", "(   )", 112, 184)
+					} else {
+						gameFont.drawText(ctx, "blue", "(  )", 152, 184)
+					}
+				} else if (raceSetupValues.mode == 1) {
+					drawRect(ctx, 64, 112, 125, 72, true, "#000000")
+					ctx.drawImage(resources.get("sprites/title_screen/selector_mushroom.png"), 71, 119)
+					ctx.drawImage(resources.get("sprites/title_screen/selector_mushroom.png"), 71, 135)
+					ctx.drawImage(resources.get("sprites/title_screen/selector_mushroom.png"), 71, 151)
+					if (raceSetupValues.playerCount == 0) {
+						gameFont.drawText(ctx, "blueGloss", "1", 88, 120)
+						gameFont.drawText(ctx, "blue", "p game", 96, 120)
+					} else {
+						gameFont.drawText(ctx, "blueGloss", "2", 88, 120)
+						gameFont.drawText(ctx, "blue", "p game", 96, 120)
+					}
+					if (raceSetupValues.mode == 0) {
+						gameFont.drawText(ctx, "blue", "mariokart gp", 88, 136)
+					} else {
+						gameFont.drawText(ctx, "blue", "time trial", 88, 136)
+					}
+					gameFont.drawText(ctx, "pink", "is this ok+", 96, 152)
+					gameFont.drawText(ctx, "pink", "yes", 120, 168)
+					gameFont.drawText(ctx, "pink", "no", 160, 168)
+					if (raceSetupValues.ok == 0) {
+						gameFont.drawText(ctx, "blue", "(   )", 112, 168)
+					} else {
+						gameFont.drawText(ctx, "blue", "(  )", 152, 168)
+					}
 				}
 			} else if (game.subGameState == "fade_to_select") {
 				if (!mainMenu.fadeOutInit) {
@@ -338,7 +374,7 @@ function main() {
 			}
 			ctx.drawImage(resources.get("sprites/character_screen/frame.png"), 0, -1)
 			characterMenu.flash = (characterMenu.flash + 1) % 4
-			if (!characterMenu.flash == 0) {
+			if (!characterMenu.flash == 0 || characterMenu.isSelected || characterMenu.confirmSelect) {
 				switch (characterMenu.character) {
 					case 0:
 						ctx.drawImage(resources.get("sprites/character_screen/player_1_select.png"), 48, 63)
@@ -366,11 +402,35 @@ function main() {
 						break;
 				}
 			}
+			if (characterMenu.isSelected && !characterMenu.confirmSelect) {
+				ctx.drawImage(resources.get("sprites/character_screen/p1_check.png"), 151, 190)
+			} else if (characterMenu.confirmSelect) {
+				ctx.drawImage(resources.get("sprites/character_screen/p1_confirm.png"), 151, 190)
+				if (!(characterMenu.characterAngle == 0)) {
+					characterMenu.characterAngle -= 1
+				} else {
+					game.gameState = "time_map_select"
+				}
+			}
 			if (performance.now() - characterMenu.startTime <= 500) {
 				ctx.globalAlpha = 1 - 0.002 * (performance.now() - characterMenu.startTime)
 				drawRect(ctx, 0, 0, WIDTH, HEIGHT, true, [0, 0, 0])
 				ctx.globalAlpha = 1
 			}
+		} else if (game.gameState == "time_map_select") {
+			drawRect(ctx, 0, 0, 256, 3, true, "#000000")
+			drawRect(ctx, 0, 107, 256, 8, true, "#000000")
+			drawRect(ctx, 0, 219, 256, 5, true, "#000000")
+			drawRect(ctx, 80, 16, 88, 8, true, "#000000")
+			
+			gameFont.drawText(ctx, "mapSelectFont", "course select", 80, 16)
+			gameFont.drawText(ctx, "magenta", "mushroom", 24, 32)
+			gameFont.drawText(ctx, "magenta", "cup", 92, 32)
+			gameFont.drawText(ctx, "mapSelectFont", "mario", 128, 32)
+			gameFont.drawText(ctx, "mapSelectFont", "circuit", 172, 32)
+			gameFont.drawText(ctx, "mapSelectFontGloss", "1", 232, 32)
+		} else if (game.gameState == "in_game") {
+
 		}
 		if (game.debug) {
 			gameFont.drawText(ctx, "debugFont", "FPS-" + Math.round(fps.framesPerSecond), 0, 0)
@@ -473,7 +533,7 @@ function onKeyDown(event) {
 			} else if (game.subGameState == "confirm_select") {
 				raceSetupValues.ok = mod(raceSetupValues.ok - 1, 2)
 			}
-		} else if (game.gameState == "character_select") {
+		} else if (game.gameState == "character_select" && !characterMenu.isSelected) {
 			characterMenu.character = mod(characterMenu.character - 4, 8) 
 		}
 		controlBooleans.up = true
@@ -483,7 +543,7 @@ function onKeyDown(event) {
 			if (game.subGameState == "confirm_select") {
 				raceSetupValues.ok = mod(raceSetupValues.ok + 1, 2)
 			}
-		} else if (game.gameState == "character_select") {
+		} else if (game.gameState == "character_select" && !characterMenu.isSelected) {
 			characterMenu.character = mod(characterMenu.character - 1, 8) 
 		}
 		controlBooleans.left = true
@@ -497,7 +557,7 @@ function onKeyDown(event) {
 			} else if (game.subGameState == "speed_select") {
 				raceSetupValues.speed = mod(raceSetupValues.speed + 1, 2)
 			}
-		} else if (game.gameState == "character_select") {
+		} else if (game.gameState == "character_select" && !characterMenu.isSelected) {
 			characterMenu.character = mod(characterMenu.character + 4, 8) 
 		}
 		controlBooleans.down = true
@@ -507,7 +567,7 @@ function onKeyDown(event) {
 			if (game.subGameState == "confirm_select") {
 				raceSetupValues.ok = mod(raceSetupValues.ok + 1, 2)
 			}
-		} else if (game.gameState == "character_select") {
+		} else if (game.gameState == "character_select" && !characterMenu.isSelected) {
 			characterMenu.character = mod(characterMenu.character + 1, 8) 
 		}
 		controlBooleans.right = true
@@ -519,7 +579,11 @@ function onKeyDown(event) {
 			} else if (game.subGameState == "player_select") {
 				game.subGameState = "mode_select"
 			} else if (game.subGameState == "mode_select") {
-				game.subGameState = "speed_select"
+				if (raceSetupValues.mode != 1) {
+					game.subGameState = "speed_select"
+				} else {
+					game.subGameState = "confirm_select"
+				}
 			} else if (game.subGameState == "speed_select") {
 				game.subGameState = "confirm_select"
 			} else if (game.subGameState == "confirm_select") {
@@ -529,6 +593,12 @@ function onKeyDown(event) {
 				} else {
 					game.subGameState = "fade_to_select"
 				}
+			}
+		} else if (game.gameState == "character_select") {
+			if (!characterMenu.isSelected) {
+				characterMenu.isSelected = true
+			} else {
+				characterMenu.confirmSelect = true
 			}
 		}
 		controlBooleans.b = true
@@ -544,22 +614,36 @@ function onKeyDown(event) {
 	}
 	if (event.keyCode == controlBinds.start && !controlBooleans.start) { // Space to Start
 		if (game.gameState == "menu_screen") {
-			if (game.subGameState == "title") {
-				game.subGameState = "player_select"
-			} else if (game.subGameState == "player_select") {
-				game.subGameState = "mode_select"
-			} else if (game.subGameState == "mode_select") {
-				game.subGameState = "speed_select"
-			} else if (game.subGameState == "speed_select") {
-				game.subGameState = "confirm_select"
-			} else if (game.subGameState == "confirm_select") {
-				if (raceSetupValues.ok == 1) {
-					game.subGameState = "title"
-					raceSetupValues = {playerCount: 0, mode: 0, speed: 0, ok: 0}
-				} else {
-					game.subGameState = "fade_to_select"
+			if (game.gameState == "menu_screen") {
+				if (game.subGameState == "title") {
+					game.subGameState = "player_select"
+				} else if (game.subGameState == "player_select") {
+					game.subGameState = "mode_select"
+				} else if (game.subGameState == "mode_select") {
+					if (raceSetupValues.mode != 1) {
+						game.subGameState = "speed_select"
+					} else {
+						game.subGameState = "confirm_select"
+					}
+				} else if (game.subGameState == "speed_select") {
+					game.subGameState = "confirm_select"
+				} else if (game.subGameState == "confirm_select") {
+					if (raceSetupValues.ok == 1) {
+						game.subGameState = "title"
+						raceSetupValues = {playerCount: 0, mode: 0, speed: 0, ok: 0}
+					} else {
+						game.subGameState = "fade_to_select"
+					}
 				}
 			}
+		} else if (game.gameState == "character_select") {
+			if (!characterMenu.isSelected) {
+				characterMenu.isSelected = true
+			} else {
+				characterMenu.confirmSelect = true
+			}
+		} else if (game.gameState == "time_map_select") {
+			game.gameState = "in_game"
 		}
 		controlBooleans.start = true
 	}
