@@ -8,7 +8,7 @@ Description: A recreation of Supeer Mario Kar for the SNES
 TODO:
 1. Noting
 */
-
+var countah = 0
 var body // stores a Element object representing the HTML body
 var canvas // stores a Element object representing the element with the "display-surface" id
 var ctx  // stores the drawing context of whatever element the canvas variable has stored
@@ -34,9 +34,15 @@ var resourcePaths = [
 	"sprites/character_screen/select_background.png",
 	"sprites/character_screen/player_1_select.png",
 	"sprites/character_screen/p1_check.png",
-	"sprites/character_screen/p1_confirm.png"
+	"sprites/character_screen/p1_confirm.png",
+	"sprites/maps/mario_circuit_2.png",
+	"sprites/maps/mc2_background_0.png",
+	"sprites/maps/mc2_background_1.png",
+	"sprites/maps/mc2_scuffed_minimap.png"
 ]
-var player = {x: 0, y: 0, net_force: new Victor(0, 0), }
+var raceValues = {isFinished: false}
+var player = {x: 0, y: 0, angle: 0, net_force: new Victor(0, 0), accleration_force: new Victor(0, 0), turn_accel: 0}
+var camera = {x: 0, y: 0}
 var layers = {
 	layerDictionary: {},
 	createLayer: function (layerName, layerWidth, layerHeight) {
@@ -61,8 +67,8 @@ function Layer(layerName, layerWidth, layerHeight) {
 	this.name = layerName;
 	this.canvas = document.createElement('canvas');
 	this.ctx = this.canvas.getContext("2d");
-	this.canvas.width = layerHeight;
-	this.canvas.height = layerWidth;
+	this.canvas.width = layerWidth;
+	this.canvas.height = layerHeight;
 }
 function init() {
 	canvas = document.getElementById("display-surface");
@@ -99,14 +105,17 @@ function init() {
 	resources.load(resourcePaths)
 	layers.createLayer("recolorFontLayer", 8, 8)
 	// character layers?
-	layers.createLayer("character0", 35, 38)
-	layers.createLayer("character1", 35, 38)
-	layers.createLayer("character2", 35, 38)
-	layers.createLayer("character3", 35, 38)
-	layers.createLayer("character4", 35, 38)
-	layers.createLayer("character5", 35, 38)
-	layers.createLayer("character6", 35, 38)
-	layers.createLayer("character7", 35, 38)
+	layers.createLayer("character0", 38, 35)
+	layers.createLayer("character1", 38, 35)
+	layers.createLayer("character2", 38, 35)
+	layers.createLayer("character3", 38, 35)
+	layers.createLayer("character4", 38, 35)
+	layers.createLayer("character5", 38, 35)
+	layers.createLayer("character6", 38, 35)
+	layers.createLayer("character7", 38, 35)
+	layers.createLayer("map", 1024, 1024)
+	layers.createLayer("perspectiveMap", 256, 448)
+	layers.createLayer("mode7", 256, 224)
 	resources.onReady(function () {
 		gameFont.createRecolor(0, 0, "debugFont", [0, 0, 0], [255, 255, 255]);
 		gameFont.createRecolor(0, 0, "font", [255, 20, 147], [255, 255, 255]);
@@ -209,9 +218,6 @@ var gameFont = {
 			}
 		}
 	}
-}
-function returnYoshi(angle) {
-	
 }
 function main() {
 	window.requestAnimationFrame(main)
@@ -326,7 +332,7 @@ function main() {
 						gameFont.drawText(ctx, "blue", "(  )", 152, 168)
 					}
 				}
-			} else if (game.subGameState == "fade_to_select") {
+			} else if (game.subGameState == "fade_select") {
 				if (!mainMenu.fadeOutInit) {
 					mainMenu.fadeOutStart = performance.now()
 					mainMenu.fadeOutInit = true
@@ -409,7 +415,7 @@ function main() {
 				if (!(characterMenu.characterAngle == 0)) {
 					characterMenu.characterAngle -= 1
 				} else {
-					game.gameState = "time_map_select"
+					game.gameState = "tmap_select"
 				}
 			}
 			if (performance.now() - characterMenu.startTime <= 500) {
@@ -417,12 +423,11 @@ function main() {
 				drawRect(ctx, 0, 0, WIDTH, HEIGHT, true, [0, 0, 0])
 				ctx.globalAlpha = 1
 			}
-		} else if (game.gameState == "time_map_select") {
+		} else if (game.gameState == "tmap_select") {
 			drawRect(ctx, 0, 0, 256, 3, true, "#000000")
 			drawRect(ctx, 0, 107, 256, 8, true, "#000000")
 			drawRect(ctx, 0, 219, 256, 5, true, "#000000")
 			drawRect(ctx, 80, 16, 88, 8, true, "#000000")
-			
 			gameFont.drawText(ctx, "mapSelectFont", "course select", 80, 16)
 			gameFont.drawText(ctx, "magenta", "mushroom", 24, 32)
 			gameFont.drawText(ctx, "magenta", "cup", 92, 32)
@@ -430,7 +435,56 @@ function main() {
 			gameFont.drawText(ctx, "mapSelectFont", "circuit", 172, 32)
 			gameFont.drawText(ctx, "mapSelectFontGloss", "1", 232, 32)
 		} else if (game.gameState == "in_game") {
-
+			if (!raceValues.isFinished) {
+				console.log(player.angle)
+				if (controlBooleans.b) {
+					player.accleration_force.y = 5
+				}
+				if (controlBooleans.left) {
+					player.turn_accel -= 1
+				} else if (player.turn_accel < 0) {
+					player.turn_accel += 1
+				}
+				if (controlBooleans.right) {
+					player.turn_accel += 1
+				} else if (player.turn_accel > 0) {
+					player.turn_accel -= 1
+				} 
+				if (player.accleration_force.y > 0) {
+					player.accleration_force.y -= 0.2
+				}
+				if (player.turn_accel > 3) {
+					player.turn_accel = 3
+				} else if (player.turn_accel < -3) {
+					player.turn_accel = -3
+				}
+				player.angle += player.turn_accel
+				player.net_force.x = 0
+				player.net_force.y = 0
+				player.net_force.add(player.accleration_force)
+				player.net_force.rotateDeg(player.angle)
+				player.x += player.net_force.x
+				player.y += player.net_force.y
+			}
+			camera.x = player.x
+			camera.y = player.y
+			layers.getLayer("map").ctx.drawImage(resources.get("sprites/maps/mario_circuit_2.png"), 0, 0)
+			drawRect(layers.getLayer("perspectiveMap").ctx, 0, 0, 256, 448, true, "#00D000")
+			layers.getLayer("perspectiveMap").ctx.save()
+			layers.getLayer("perspectiveMap").ctx.translate(WIDTH / 2, HEIGHT / 2)
+			layers.getLayer("perspectiveMap").ctx.rotate(-player.angle * (Math.PI/180))
+			layers.getLayer("perspectiveMap").ctx.drawImage(layers.getLayer("map").canvas, camera.x, camera.y)
+			drawRect(layers.getLayer("perspectiveMap").ctx, 0, 0, 100, 100, true, "#FF0000")
+			layers.getLayer("perspectiveMap").ctx.restore()
+			for (let i =0 ; i < 83; i++) {
+				ctx.drawImage(layers.getLayer("perspectiveMap").canvas, 0, (224 / 83) * i, 256, 1, -(i ** 1.2) /2, i + 24, 256 + i ** 1.2, 1)
+			}
+			drawRect(ctx, 0, 0, 256, 3, true, "#000000")
+			drawRect(ctx, 0, 107, 256, 8, true, "#000000")
+			drawRect(ctx, 0, 219, 256, 5, true, "#000000")
+			ctx.drawImage(resources.get("mc2_background_0.png"), 0, -8)
+			ctx.drawImage(resources.get("mc2_background_1.png"), 0, -8)
+			ctx.drawImage(resources.get("sprites/maps/mc2_scuffed_minimap.png"), 0, 115)
 		}
 		if (game.debug) {
 			gameFont.drawText(ctx, "debugFont", "FPS-" + Math.round(fps.framesPerSecond), 0, 0)
@@ -442,7 +496,7 @@ function main() {
 };
 //https://gamedev.stackexchange.com/questions/24957/doing-an-snes-mode-7-affine-transform-effect-in-pygame
 /*	
-	copy pasted because I didn't feel like coding one on the spot.
+	copy pasted because I didn't feel like coding one and because it works.
 	might refactor to be more readable
 	use: load, get, isReady, onReady.
 */
@@ -591,7 +645,7 @@ function onKeyDown(event) {
 					game.subGameState = "title"
 					raceSetupValues = {playerCount: 0, mode: 0, speed: 0, ok: 0}
 				} else {
-					game.subGameState = "fade_to_select"
+					game.subGameState = "fade_select"
 				}
 			}
 		} else if (game.gameState == "character_select") {
@@ -600,6 +654,8 @@ function onKeyDown(event) {
 			} else {
 				characterMenu.confirmSelect = true
 			}
+		} else if (game.gameState == "tmap_select") {
+			game.gameState = "in_game"
 		}
 		controlBooleans.b = true
 	}
