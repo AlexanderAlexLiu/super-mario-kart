@@ -2,7 +2,7 @@
 Author: Alex Liu
 Creation Date: October 11, 2019
 Purpose: Final project for ICS3U
-Description: A recreation of Supeer Mario Kar for the SNES
+Description: A (really garbage) recreation of Super Mario KarT for the SNES
 /*
 /*
 TODO:
@@ -38,10 +38,27 @@ var resourcePaths = [
 	"sprites/maps/mario_circuit_2.png",
 	"sprites/maps/mc2_background_0.png",
 	"sprites/maps/mc2_background_1.png",
-	"sprites/maps/mc2_scuffed_minimap.png"
+	"sprites/maps/mc2_scuffed_minimap.png",
+	"sprites/driver/yoshi/idle.png"
 ]
-var raceValues = {isFinished: false}
-var player = {x: 0, y: 0, angle: 0, net_force: new Victor(0, 0), accleration_force: new Victor(0, 0), turn_accel: 0}
+var raceValues = {isFinished: false, background_0_x: 0, background_1_x: 0, mapBoundingBoxes: 
+	[
+		[0, 0, 744, 8],
+		[736, 0, 8, 160],
+		[736, 152, 288, 8],
+		[1016, 152, 8, 872],
+		[472, 1016, 552, 8],
+		[472, 872, 8, 144],
+		[0, 872, 480, 8],
+		[0, 0, 8, 880],
+		[136, 552, 40, 112],
+		[168, 160, 104, 432],
+		[263, 376, 424, 120],
+		[680, 416, 136, 80],
+		[736, 495, 80, 321]
+	]
+}
+var player = {x: -920, y: -595, angle: 0, net_force: new Victor(0, 0), accleration_force: new Victor(0, 0), turn_accel: 0, checkpointCollected: false, laps: 0, hit: true}
 var camera = {x: 0, y: 0}
 var layers = {
 	layerDictionary: {},
@@ -115,7 +132,7 @@ function init() {
 	layers.createLayer("character7", 38, 35)
 	layers.createLayer("map", 1024, 1024)
 	layers.createLayer("perspectiveMap", 256, 448)
-	layers.createLayer("mode7", 256, 224)
+	layers.createLayer("mode7", 256, 448)
 	resources.onReady(function () {
 		gameFont.createRecolor(0, 0, "debugFont", [0, 0, 0], [255, 255, 255]);
 		gameFont.createRecolor(0, 0, "font", [255, 20, 147], [255, 255, 255]);
@@ -435,6 +452,7 @@ function main() {
 			gameFont.drawText(ctx, "mapSelectFont", "circuit", 172, 32)
 			gameFont.drawText(ctx, "mapSelectFontGloss", "1", 232, 32)
 		} else if (game.gameState == "in_game") {
+			clearCanvas(ctx)
 			if (!raceValues.isFinished) {
 				console.log(player.angle)
 				if (controlBooleans.b) {
@@ -442,11 +460,15 @@ function main() {
 				}
 				if (controlBooleans.left) {
 					player.turn_accel -= 1
+					raceValues.background_0_x = mod(raceValues.background_0_x + 1, 768)
+					raceValues.background_1_x = mod(raceValues.background_1_x + 2, 1280)
 				} else if (player.turn_accel < 0) {
 					player.turn_accel += 1
 				}
 				if (controlBooleans.right) {
 					player.turn_accel += 1
+					raceValues.background_0_x = mod(raceValues.background_0_x - 1, 768)
+					raceValues.background_1_x = mod(raceValues.background_1_x - 2, 1280)
 				} else if (player.turn_accel > 0) {
 					player.turn_accel -= 1
 				} 
@@ -463,28 +485,51 @@ function main() {
 				player.net_force.y = 0
 				player.net_force.add(player.accleration_force)
 				player.net_force.rotateDeg(player.angle)
-				player.x += player.net_force.x
-				player.y += player.net_force.y
+				player.hit = false
+				raceValues.mapBoundingBoxes.forEach(box => {
+					if ((-player.x + player.net_force.x > box[0] && -player.x + player.net_force.x < box[0] + box[2]) && (-player.y + player.net_force.y > box[1] && -player.y + player.net_force.y < box[1] + box[3])) {
+						player.x -= player.net_force.x * 2
+						player.y -= player.net_force.y * 2
+						player.hit = true
+					}
+				})
+				if (!player.hit) {
+					player.x += player.net_force.x
+					player.y += player.net_force.y
+				}
 			}
 			camera.x = player.x
 			camera.y = player.y
+			if ((-player.x > 815 && -player.x< 1015) && (-player.y > 552 && -player.y < 560) && player.checkpointCollected) {
+				player.laps += 1
+				player.checkpointCollected = false
+			}
+			if ((-player.x > 5 && -player.x< 160) && (-player.y > 295 && -player.y < 330)) {
+				player.checkpointCollected = true
+			}
+			player.milliseconds = performance.now() - player.dt
 			layers.getLayer("map").ctx.drawImage(resources.get("sprites/maps/mario_circuit_2.png"), 0, 0)
 			drawRect(layers.getLayer("perspectiveMap").ctx, 0, 0, 256, 448, true, "#00D000")
 			layers.getLayer("perspectiveMap").ctx.save()
 			layers.getLayer("perspectiveMap").ctx.translate(WIDTH / 2, HEIGHT / 2)
 			layers.getLayer("perspectiveMap").ctx.rotate(-player.angle * (Math.PI/180))
 			layers.getLayer("perspectiveMap").ctx.drawImage(layers.getLayer("map").canvas, camera.x, camera.y)
-			drawRect(layers.getLayer("perspectiveMap").ctx, 0, 0, 100, 100, true, "#FF0000")
+			//drawRect(layers.getLayer("perspectiveMap").ctx, 0, 0, 100, 100, true, "#FF0000")
 			layers.getLayer("perspectiveMap").ctx.restore()
 			for (let i =0 ; i < 83; i++) {
-				ctx.drawImage(layers.getLayer("perspectiveMap").canvas, 0, (224 / 83) * i, 256, 1, -(i ** 1.2) /2, i + 24, 256 + i ** 1.2, 1)
+				ctx.drawImage(layers.getLayer("perspectiveMap").canvas, 0, (448 / 83) * i, 256, 1, -i/2, 24 + i, 256 + i, 1)
 			}
+			ctx.drawImage(resources.get("sprites/maps/mc2_background_0.png"), raceValues.background_0_x - 768, -8)
+			ctx.drawImage(resources.get("sprites/maps/mc2_background_0.png"), raceValues.background_0_x, -8)
+			ctx.drawImage(resources.get("sprites/maps/mc2_background_1.png"), raceValues.background_1_x - 1280, -8)
+			ctx.drawImage(resources.get("sprites/maps/mc2_background_1.png"), raceValues.background_1_x, -8)
+			ctx.drawImage(resources.get("sprites/maps/mc2_scuffed_minimap.png"), 0, 115)
+			ctx.drawImage(resources.get("sprites/driver/yoshi/idle.png"), WIDTH / 2 - 16, 24)
 			drawRect(ctx, 0, 0, 256, 3, true, "#000000")
 			drawRect(ctx, 0, 107, 256, 8, true, "#000000")
 			drawRect(ctx, 0, 219, 256, 5, true, "#000000")
-			ctx.drawImage(resources.get("mc2_background_0.png"), 0, -8)
-			ctx.drawImage(resources.get("mc2_background_1.png"), 0, -8)
-			ctx.drawImage(resources.get("sprites/maps/mc2_scuffed_minimap.png"), 0, 115)
+			gameFont.drawText(ctx, "debugFont", "Laps " + player.laps, 0, 16)
+			gameFont.drawText(ctx, "debugFont", "Time " + Math.round(player.milliseconds) + " ms", 0, 32)
 		}
 		if (game.debug) {
 			gameFont.drawText(ctx, "debugFont", "FPS-" + Math.round(fps.framesPerSecond), 0, 0)
@@ -655,6 +700,7 @@ function onKeyDown(event) {
 				characterMenu.confirmSelect = true
 			}
 		} else if (game.gameState == "tmap_select") {
+			player.dt = performance.now()
 			game.gameState = "in_game"
 		}
 		controlBooleans.b = true
@@ -699,6 +745,7 @@ function onKeyDown(event) {
 				characterMenu.confirmSelect = true
 			}
 		} else if (game.gameState == "time_map_select") {
+			player.dt = performance.now()
 			game.gameState = "in_game"
 		}
 		controlBooleans.start = true
