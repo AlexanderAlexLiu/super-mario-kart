@@ -8,7 +8,6 @@ Description: A (really garbage) recreation of Super Mario KarT for the SNES
 TODO:
 1. Noting
 */
-var countah = 0
 var body // stores a Element object representing the HTML body
 var canvas // stores a Element object representing the element with the "display-surface" id
 var ctx  // stores the drawing context of whatever element the canvas variable has stored
@@ -16,12 +15,12 @@ var WIDTH, HEIGHT // stores constants of the canvas's width and height respectiv
 var game = { gameScale: 2, debug: false, gameState: "", subGameState: "" }
 var fps = { deltaTime: 1, pastTime: 0, presentTime: 0, framesPerSecond: 0, fpsSmoothing: 0.9 }
 var clock = { frameInterval: undefined, then: undefined, now: undefined, startTime: undefined, fpsCap: undefined, elapsed: undefined }
-var menuBackgroundValues = { backgroundXPos1: undefined, backgroundXPos2: undefined, scrollSpeed: 90}
+var menuBackgroundValues = { backgroundXPos1: undefined, backgroundXPos2: undefined, scrollSpeed: 90 }
 var controlBooleans = { up: false, down: false, right: false, left: false, b: false, a: false, x: false, y: false, start: false, select: false, l: false, r: false }
 var controlBinds = { debug: 77, up: 38, left: 37, down: 40, right: 39, b: 67, a: 86, y: 88, x: 68, start: 32, select: 13, l: 65, r: 83 }
-var mainMenu = {startTime: 0, initialized: false, sinceStart: 0, fadeOutStart: 0, fadeOutInit: false}
-var raceSetupValues = {playerCount: 0, mode: 0, speed: 0, ok: 0}
-var characterMenu = {startTime: 0, init: false, character: 0, isSelected: false, flash: 0, characterAngle: 90, confirmSelect: false}
+var mainMenu = { startTime: 0, initialized: false, sinceStart: 0, fadeOutStart: 0, fadeOutInit: false }
+var raceSetupValues = { playerCount: 0, mode: 0, speed: 0, ok: 0 }
+var characterMenu = { startTime: 0, init: false, character: 0, isSelected: false, flash: 0, characterAngle: 90, confirmSelect: false }
 var characterLayers = ["character0", "character1", "character2", "character3", "character4", "character5", "character6", "character7"]
 var resourcePaths = [
 	'sprites/nintendo_logo.png',
@@ -41,25 +40,26 @@ var resourcePaths = [
 	"sprites/maps/mc2_scuffed_minimap.png",
 	"sprites/driver/yoshi/idle.png"
 ]
-var raceValues = {isFinished: false, background_0_x: 0, background_1_x: 0, mapBoundingBoxes: 
-	[
-		[0, 0, 744, 8],
-		[736, 0, 8, 160],
-		[736, 152, 288, 8],
-		[1016, 152, 8, 872],
-		[472, 1016, 552, 8],
-		[472, 872, 8, 144],
-		[0, 872, 480, 8],
-		[0, 0, 8, 880],
-		[136, 552, 40, 112],
-		[168, 160, 104, 432],
-		[263, 376, 424, 120],
-		[680, 416, 136, 80],
-		[736, 495, 80, 321]
-	]
+var raceValues = {
+	isFinished: false, background_0_x: 0, background_1_x: 0, mapBoundingBoxes:
+		[
+			[0, 0, 744, 8],
+			[736, 0, 8, 160],
+			[736, 152, 288, 8],
+			[1016, 152, 8, 872],
+			[472, 1016, 552, 8],
+			[472, 872, 8, 144],
+			[0, 872, 480, 8],
+			[0, 0, 8, 880],
+			[136, 552, 40, 112],
+			[168, 160, 104, 432],
+			[263, 376, 424, 120],
+			[680, 416, 136, 80],
+			[736, 495, 80, 321]
+		]
 }
-var player = {x: -920, y: -595, angle: 0, net_force: new Victor(0, 0), accleration_force: new Victor(0, 0), turn_accel: 0, checkpointCollected: false, laps: 0, hit: true}
-var camera = {x: 0, y: 0}
+var player = { x: -920, y: -595, angle: 0, net_force: new Victor(0, 0), accleration_force: new Victor(0, 0), turn_accel: 0, checkpointCollected: false, laps: 0, hit: true }
+var camera = { x: 0, y: 0 }
 var layers = {
 	layerDictionary: {},
 	createLayer: function (layerName, layerWidth, layerHeight) {
@@ -143,7 +143,7 @@ function init() {
 		gameFont.createRecolor(0, 1, "pinkGloss", [208, 0, 208], [248, 248, 248], [200, 200, 232])
 		gameFont.createRecolor(0, 0, "mapSelectFont", [0, 0, 0], [255, 255, 255]);
 		gameFont.createRecolor(0, 1, "mapSelectFontGloss", [0, 0, 0], [248, 248, 248], [206, 206, 239])
-		})
+	})
 	resources.onReady(function () { main() })
 }
 var gameFont = {
@@ -250,7 +250,7 @@ function main() {
 				mainMenu.startTime = performance.now()
 				mainMenu.initialized = true
 			}
-			mainMenu.sinceStart = performance.now() - mainMenu.startTime 
+			mainMenu.sinceStart = performance.now() - mainMenu.startTime
 			if (game.subGameState == "title" || game.subGameState == "nintendo") {
 				menuBackgroundValues.backgroundXPos1 = -((mainMenu.sinceStart / 1000 * menuBackgroundValues.scrollSpeed) % WIDTH)
 				menuBackgroundValues.backgroundXPos2 = WIDTH - ((mainMenu.sinceStart / 1000 * menuBackgroundValues.scrollSpeed) % WIDTH)
@@ -386,7 +386,7 @@ function main() {
 				layerName => {
 					if (!(characterMenu.isSelected && characterMenu.character == layerName.charAt(9))) {
 						layers.getLayer(layerName).ctx.drawImage(resources.get("sprites/character_screen/select_background.png"), 0 - (((performance.now() - characterMenu.startTime) / 12) % 49), -6);
-						layers.getLayer(layerName).ctx.drawImage(resources.get("sprites/character_screen/select_background.png"), 48 - (((performance.now() - characterMenu.startTime) / 12) % 49), -6)	
+						layers.getLayer(layerName).ctx.drawImage(resources.get("sprites/character_screen/select_background.png"), 48 - (((performance.now() - characterMenu.startTime) / 12) % 49), -6)
 					}
 				}
 			)
@@ -471,7 +471,7 @@ function main() {
 					raceValues.background_1_x = mod(raceValues.background_1_x - 2, 1280)
 				} else if (player.turn_accel > 0) {
 					player.turn_accel -= 1
-				} 
+				}
 				if (player.accleration_force.y > 0) {
 					player.accleration_force.y -= 0.2
 				}
@@ -500,11 +500,11 @@ function main() {
 			}
 			camera.x = player.x
 			camera.y = player.y
-			if ((-player.x > 815 && -player.x< 1015) && (-player.y > 552 && -player.y < 560) && player.checkpointCollected) {
+			if ((-player.x > 815 && -player.x < 1015) && (-player.y > 552 && -player.y < 560) && player.checkpointCollected) {
 				player.laps += 1
 				player.checkpointCollected = false
 			}
-			if ((-player.x > 5 && -player.x< 160) && (-player.y > 295 && -player.y < 330)) {
+			if ((-player.x > 5 && -player.x < 160) && (-player.y > 295 && -player.y < 330)) {
 				player.checkpointCollected = true
 			}
 			player.milliseconds = performance.now() - player.dt
@@ -512,12 +512,12 @@ function main() {
 			drawRect(layers.getLayer("perspectiveMap").ctx, 0, 0, 256, 448, true, "#00D000")
 			layers.getLayer("perspectiveMap").ctx.save()
 			layers.getLayer("perspectiveMap").ctx.translate(WIDTH / 2, HEIGHT / 2)
-			layers.getLayer("perspectiveMap").ctx.rotate(-player.angle * (Math.PI/180))
+			layers.getLayer("perspectiveMap").ctx.rotate(-player.angle * (Math.PI / 180))
 			layers.getLayer("perspectiveMap").ctx.drawImage(layers.getLayer("map").canvas, camera.x, camera.y)
 			//drawRect(layers.getLayer("perspectiveMap").ctx, 0, 0, 100, 100, true, "#FF0000")
 			layers.getLayer("perspectiveMap").ctx.restore()
-			for (let i =0 ; i < 83; i++) {
-				ctx.drawImage(layers.getLayer("perspectiveMap").canvas, 0, (448 / 83) * i, 256, 1, -i/2, 24 + i, 256 + i, 1)
+			for (let i = 0; i < 83; i++) {
+				ctx.drawImage(layers.getLayer("perspectiveMap").canvas, 0, (448 / 83) * i, 256, 1, -i / 2, 24 + i, 256 + i, 1)
 			}
 			ctx.drawImage(resources.get("sprites/maps/mc2_background_0.png"), raceValues.background_0_x - 768, -8)
 			ctx.drawImage(resources.get("sprites/maps/mc2_background_0.png"), raceValues.background_0_x, -8)
@@ -633,7 +633,7 @@ function onKeyDown(event) {
 				raceSetupValues.ok = mod(raceSetupValues.ok - 1, 2)
 			}
 		} else if (game.gameState == "character_select" && !characterMenu.isSelected) {
-			characterMenu.character = mod(characterMenu.character - 4, 8) 
+			characterMenu.character = mod(characterMenu.character - 4, 8)
 		}
 		controlBooleans.up = true
 	}
@@ -643,7 +643,7 @@ function onKeyDown(event) {
 				raceSetupValues.ok = mod(raceSetupValues.ok + 1, 2)
 			}
 		} else if (game.gameState == "character_select" && !characterMenu.isSelected) {
-			characterMenu.character = mod(characterMenu.character - 1, 8) 
+			characterMenu.character = mod(characterMenu.character - 1, 8)
 		}
 		controlBooleans.left = true
 	}
@@ -657,7 +657,7 @@ function onKeyDown(event) {
 				raceSetupValues.speed = mod(raceSetupValues.speed + 1, 2)
 			}
 		} else if (game.gameState == "character_select" && !characterMenu.isSelected) {
-			characterMenu.character = mod(characterMenu.character + 4, 8) 
+			characterMenu.character = mod(characterMenu.character + 4, 8)
 		}
 		controlBooleans.down = true
 	}
@@ -667,7 +667,7 @@ function onKeyDown(event) {
 				raceSetupValues.ok = mod(raceSetupValues.ok + 1, 2)
 			}
 		} else if (game.gameState == "character_select" && !characterMenu.isSelected) {
-			characterMenu.character = mod(characterMenu.character + 1, 8) 
+			characterMenu.character = mod(characterMenu.character + 1, 8)
 		}
 		controlBooleans.right = true
 	}
@@ -688,7 +688,7 @@ function onKeyDown(event) {
 			} else if (game.subGameState == "confirm_select") {
 				if (raceSetupValues.ok == 1) {
 					game.subGameState = "title"
-					raceSetupValues = {playerCount: 0, mode: 0, speed: 0, ok: 0}
+					raceSetupValues = { playerCount: 0, mode: 0, speed: 0, ok: 0 }
 				} else {
 					game.subGameState = "fade_select"
 				}
@@ -732,7 +732,7 @@ function onKeyDown(event) {
 				} else if (game.subGameState == "confirm_select") {
 					if (raceSetupValues.ok == 1) {
 						game.subGameState = "title"
-						raceSetupValues = {playerCount: 0, mode: 0, speed: 0, ok: 0}
+						raceSetupValues = { playerCount: 0, mode: 0, speed: 0, ok: 0 }
 					} else {
 						game.subGameState = "fade_to_select"
 					}
