@@ -12,16 +12,16 @@ var body // stores a Element object representing the HTML body
 var canvas // stores a Element object representing the element with the "display-surface" id
 var ctx  // stores the drawing context of whatever element the canvas variable has stored
 var WIDTH, HEIGHT // stores constants of the canvas's width and height respectively
-var game = { gameScale: 2, debug: false, gameState: "", subGameState: "" }
-var fps = { deltaTime: 1, pastTime: 0, presentTime: 0, framesPerSecond: 0, fpsSmoothing: 0.9 }
-var clock = { frameInterval: undefined, then: undefined, now: undefined, startTime: undefined, fpsCap: undefined, elapsed: undefined }
-var menuBackgroundValues = { backgroundXPos1: undefined, backgroundXPos2: undefined, scrollSpeed: 90 }
-var controlBooleans = { up: false, down: false, right: false, left: false, b: false, a: false, x: false, y: false, start: false, select: false, l: false, r: false }
-var controlBinds = { debug: 77, up: 38, left: 37, down: 40, right: 39, b: 67, a: 86, y: 88, x: 68, start: 32, select: 13, l: 65, r: 83 }
-var mainMenu = { startTime: 0, initialized: false, sinceStart: 0, fadeOutStart: 0, fadeOutInit: false }
-var raceSetupValues = { playerCount: 0, mode: 0, speed: 0, ok: 0 }
-var characterMenu = { startTime: 0, init: false, character: 0, isSelected: false, flash: 0, characterAngle: 90, confirmSelect: false }
-var characterLayers = ["character0", "character1", "character2", "character3", "character4", "character5", "character6", "character7"]
+var game = { gameScale: 2, debug: false, gameState: "", subGameState: "" } // game object used to keep track of the game
+var fps = { deltaTime: 1, pastTime: 0, presentTime: 0, framesPerSecond: 0, fpsSmoothing: 0.9 } // fps object used to time fps and other things
+var clock = { frameInterval: undefined, then: undefined, now: undefined, startTime: undefined, fpsCap: undefined, elapsed: undefined } // clock object used to contro the fps
+var menuBackgroundValues = { backgroundXPos1: undefined, backgroundXPos2: undefined, scrollSpeed: 90 } // main menu object used to control the main menu's background
+var controlBooleans = { up: false, down: false, right: false, left: false, b: false, a: false, x: false, y: false, start: false, select: false, l: false, r: false } // booleans for when a key is pressed (though not all of them are used)
+var controlBinds = { debug: 77, up: 38, left: 37, down: 40, right: 39, b: 67, a: 86, y: 88, x: 68, start: 32, select: 13, l: 65, r: 83 } // object with a bunch of keyboard keyCodes to set custom binds to buttons
+var mainMenu = { startTime: 0, initialized: false, sinceStart: 0, fadeOutStart: 0, fadeOutInit: false } // main menu object used to control the main menu itself
+var raceSetupValues = { playerCount: 0, mode: 0, speed: 0, ok: 0 } // object used to keep track of what the user has selected (though a really scuffed version of time trials happens no matter what)
+var characterMenu = { startTime: 0, init: false, character: 0, isSelected: false, flash: 0, characterAngle: 90, confirmSelect: false } // object used to keep track of values for the character selection screen
+var characterLayers = ["character0", "character1", "character2", "character3", "character4", "character5", "character6", "character7"] // array of strings to be used to get layers later
 var resourcePaths = [
 	'sprites/nintendo_logo.png',
 	'sprites/title_screen/title_background.png',
@@ -39,10 +39,27 @@ var resourcePaths = [
 	"sprites/maps/mc2_background_1.png",
 	"sprites/maps/mc2_scuffed_minimap.png",
 	"sprites/driver/yoshi/idle.png"
-]
-var raceValues = {
+] // file paths for all the resources needed to run the "game"
+// sound object contructor thank u w3schools
+function sound(src) {
+	this.sound = document.createElement("audio"); // creates an <audio> element
+	this.sound.src = src; // sets it's source to the formal parameter "src" above
+	this.sound.setAttribute("preload", "auto"); // preloads the audio
+	this.sound.setAttribute("controls", "none"); // hides the controls for the audio
+	this.sound.style.display = "none"; // hides the audio itself
+	document.body.appendChild(this.sound); // adds the audio to the document (though invisible)
+	this.play = function () { // play method plays the audio (who would have though)
+		this.sound.play();
+	}
+	this.stop = function () { // stop method pauses the audio (wow.)
+		this.sound.pause();
+	}
+}
+var track = new sound("scuffed.mp3") // the only audio in the game, don't think an object was nessasary but what the heck.
+track.sound.loop = true // a boolean that decides if the audio should loop after it finishes playing
+var raceValues = { // a race object to store some HARD CODED values about the SINGULAR map
 	isFinished: false, background_0_x: 0, background_1_x: 0, mapBoundingBoxes:
-		[
+		[ // rectangles that are on the map to make sure you don't play, *ahem* bump into things...
 			[0, 0, 744, 8],
 			[736, 0, 8, 160],
 			[736, 152, 288, 8],
@@ -56,60 +73,71 @@ var raceValues = {
 			[263, 376, 424, 120],
 			[680, 416, 136, 80],
 			[736, 495, 80, 321]
-		]
+		] // seriously though, the mode 7 copy is so bad you'll get lost if you somehow clip out of bounds (which it isn't hard to do)
 }
+// object to store any value to do with the SINGULAR player, this includes the player's x and y, their angle, and a couple of other values and vectors that are crucial to gameplay
 var player = { x: -920, y: -595, angle: 0, net_force: new Victor(0, 0), accleration_force: new Victor(0, 0), turn_accel: 0, checkpointCollected: false, laps: 0, hit: true }
-var camera = { x: 0, y: 0 }
-var layers = {
+var camera = { x: 0, y: 0 } // camera object to store camera things (to store camera's x and y values)
+var layers = { // layer object that does things with canvases and contexts and layers and more
 	layerDictionary: {},
-	createLayer: function (layerName, layerWidth, layerHeight) {
-		if (!(layerName in this.layerDictionary)) {
+	createLayer: function (layerName, layerWidth, layerHeight) { // method to create a layer with an assigned name so you can get it later
+		if (!(layerName in this.layerDictionary)) { // if statement that checks if that layer already exists to make sure it doesn't create layers with duplicate names
 			console.log(`Creating a ${layerWidth}px by ${layerHeight}px layer named ${layerName}`)
 			this.layerDictionary[layerName] = new Layer(layerName, layerWidth, layerHeight)
-			this.layerDictionary[layerName].ctx.imageSmoothingEnabled = false
+			this.layerDictionary[layerName].ctx.imageSmoothingEnabled = false // pixelated game so the canvases are "told" to not slap on that anti-aliasing
 		} else {
 			throw `A layer called ${layerName} already exists.`;
 		}
 	},
-	getLayer: function (layerName) {
+	getLayer: function (layerName) { // a method that takes a (supposedly existing) layer name and returns it
 		layer = this.layerDictionary[layerName];
 		if (typeof layer == 'undefined') {
-			throw `Layer "${layerName}" doesn't exist.`
+			throw `Layer "${layerName}" doesn't exist.` // However, if the programmer is lying about said name, an error will be raised 
 		} else {
 			return layer;
 		}
 	}
 }
-function Layer(layerName, layerWidth, layerHeight) {
+function Layer(layerName, layerWidth, layerHeight) { // layer object constructor that goes with the layers object
 	this.name = layerName;
 	this.canvas = document.createElement('canvas');
 	this.ctx = this.canvas.getContext("2d");
 	this.canvas.width = layerWidth;
 	this.canvas.height = layerHeight;
 }
-function init() {
+function init() { // init function that is called when the website loads
+	// the main display surface, used to display... the main things.
 	canvas = document.getElementById("display-surface");
 	ctx = canvas.getContext("2d");
+	// setting a resolution for the display surface
 	canvas.width = 256;
 	canvas.height = 224;
+	// scale the surface up to a size (cause 256x224 is pretty small)
 	const canvasScaledWidth = canvas.width * game.gameScale
 	const canvasScaledHeight = canvas.height * game.gameScale
 	canvas.style.width = `${canvasScaledWidth}px`
 	canvas.style.height = `${canvasScaledHeight}px`
+	// the coordinate system stays the same after scaling
+	// some constants to store the screen size and screen height
 	WIDTH = ctx.canvas.width;
 	HEIGHT = ctx.canvas.height;
+	// setting up some game states so the game doesn't break instantly (and so it works :))
 	game.gameState = "menu_screen"
 	game.subGameState = "nintendo"
+	// eye candy: makes the background a random colour
 	document.getElementById('display-surface').focus()
 	body = document.getElementsByTagName("body")[0]
 	body.style.background = getRandomColor(1, 270)
+	// initializes some values for the menu background
 	menuBackgroundValues.backgroundXPos2 = 0
 	menuBackgroundValues.backgroundXPos1 = 0
 	ctx.imageSmoothingEnabled = false;
+	// initializing some values for the FPS
 	clock.fpsCap = 60
 	clock.frameInterval = 1000.0 / clock.fpsCap
 	clock.then = performance.now()
 	clock.startTime = clock.then
+	// for loops that create all the font image paths (so I don't have to do them manually)
 	for (let i = 0; i < gameFont.gameFont1String.length; i++) {
 		gameFont.gameFont1ResourcePaths.push(`font/normal/${gameFont.gameFont1String.charAt(i)}.png`)
 		gameFont.gameFont1ResourcePaths.push(`font/gloss/${gameFont.gameFont1String.charAt(i)}.png`)
@@ -118,10 +146,12 @@ function init() {
 		gameFont.gameFont1ResourcePaths.push(`font/normal/${i}_cc.png`)
 		gameFont.gameFont1ResourcePaths.push(`font/gloss/${i}_cc.png`)
 	}
+	// add the game font paths to resource paths 
 	resourcePaths = resourcePaths.concat(gameFont.gameFont1ResourcePaths)
-	resources.load(resourcePaths)
+	resources.load(resourcePaths) // load all the resource paths
+	// creating a layer to be used to recolor the font
 	layers.createLayer("recolorFontLayer", 8, 8)
-	// character layers?
+	// character layers for the character selection screen 
 	layers.createLayer("character0", 38, 35)
 	layers.createLayer("character1", 38, 35)
 	layers.createLayer("character2", 38, 35)
@@ -130,10 +160,13 @@ function init() {
 	layers.createLayer("character5", 38, 35)
 	layers.createLayer("character6", 38, 35)
 	layers.createLayer("character7", 38, 35)
+	// layer to contain the map itself
 	layers.createLayer("map", 1024, 1024)
+	// layer to contain the mode 7'd version of the map
 	layers.createLayer("perspectiveMap", 256, 448)
-	layers.createLayer("mode7", 256, 448)
+	// couple callbacks for when the load function finishes loading all the images
 	resources.onReady(function () {
+		// 100% just creating font recolors
 		gameFont.createRecolor(0, 0, "debugFont", [0, 0, 0], [255, 255, 255]);
 		gameFont.createRecolor(0, 0, "font", [255, 20, 147], [255, 255, 255]);
 		gameFont.createRecolor(0, 0, "blue", [0, 104, 248], [248, 248, 248])
@@ -146,15 +179,18 @@ function init() {
 	})
 	resources.onReady(function () { main() })
 }
-var gameFont = {
+var gameFont = { // game font object that stores all the recolours and uses them too
+	// variables that help keep track of what font characters exist
 	gameFont1ResourcePaths: [],
 	gameFont1String: "!().'-@+0123456789abcdefghijklmnopqrstuvwxyz",
 	gameFont1ExtendedString: "!().'-@+0123456789abcdefghijklmnopqrstuvwxyz^*<>",
-	recolorDict: {},
-	createRecolor: function (style, type, fontName, color1, color2, color3 = [0, 0, 0]) {
+	recolorDict: {}, // dictionary (object with attributes known as "keys") that stores all the recolored fonts under a name for later used
+	createRecolor: function (style, type, fontName, color1, color2, color3 = [0, 0, 0]) { // recolor method
+		// if statement that checks for style and type (style doesn't change since there is no rip of the other style, there is only the one)
 		if (style == 0) {
-			if (type == 0) {
-				let gameFontDict = {}
+			if (type == 0) { // type 0 is the font with no gloss, while type 1 is the font with the gloss
+				let gameFontDict = {} // declares a dictionary to store the recolored font
+				// loops through all the font character images, creates copies of them, recolors them, and then stores them into game font dictionary
 				for (var i in this.gameFont1ExtendedString) {
 					gameFontDict[this.gameFont1ExtendedString.charAt(i)] = new Image(8, 8)
 					layers.getLayer("recolorFontLayer").ctx.clearRect(0, 0, 8, 8)
@@ -175,12 +211,12 @@ var gameFont = {
 							}
 						}
 					}
-					console.log(`recolored: ${this.gameFont1ExtendedString[i]} ${i}`)
+					console.log(`recolored: ${this.gameFont1ExtendedString[i]} ${i}`) // for debugging, telling us what it has recolored
 					layers.getLayer("recolorFontLayer").ctx.putImageData(imageData, 0, 0, 0, 0, 8, 8)
 					gameFontDict[this.gameFont1ExtendedString.charAt(i)].src = layers.getLayer("recolorFontLayer").canvas.toDataURL()
 				}
-				this.recolorDict[fontName] = gameFontDict
-			} else if (type == 1) {
+				this.recolorDict[fontName] = gameFontDict // adding to the dictionary of recoloured fonts
+			} else if (type == 1) { // same thing as type 0, but there is an extra color to take care of this time
 				let gameFontDict = {}
 				for (var i in this.gameFont1ExtendedString) {
 					gameFontDict[this.gameFont1ExtendedString.charAt(i)] = new Image(8, 8)
@@ -214,10 +250,10 @@ var gameFont = {
 			}
 		}
 	},
-	drawText: function (ctx, fontName, string, x, y) {
+	drawText: function (ctx, fontName, string, x, y) { // a method that draws text at a location based on parameters
 		let fontDictionary = this.recolorDict[fontName]
-		string = string.toLowerCase()
-		var xOffset = 0;
+		string = string.toLowerCase() // lower the string parameter to catch all the cases
+		var xOffset = 0; // an "offset" variable to keep track of where the function should draw the next character
 		for (let i in string) {
 			if (string.charAt(i) == " ") {
 				xOffset += 8
@@ -231,46 +267,56 @@ var gameFont = {
 				xOffset += 4
 			} else {
 				ctx.drawImage(fontDictionary[string.charAt(i)], x + xOffset, y)
-				xOffset += 8
+				xOffset += 8 // adding to the offset everytime something is drawn
 			}
 		}
 	}
 }
-function main() {
-	window.requestAnimationFrame(main)
+function main() { // the main function
+	window.requestAnimationFrame(main) // request another animation frame with main() as the callback (basically queued to get called again)
+	// setting variables that will handle the FPS
 	clock.now = performance.now();
 	clock.elapsed = clock.now - clock.then
 	fps.presentTime = performance.now()
 	fps.framesPerSecond = (fps.framesPerSecond * fps.fpsSmoothing) + ((1.0 / fps.deltaTime) * (1 - fps.fpsSmoothing))
-	if (clock.elapsed >= clock.frameInterval) {
-		fps.deltaTime = (fps.presentTime - fps.pastTime) / 1000.0
+	if (clock.elapsed >= clock.frameInterval) { // an if statement that updates the screen so it is limited to 60 updates per second
+		fps.deltaTime = (fps.presentTime - fps.pastTime) / 1000.0 // more fps handling variables
 		clock.then = clock.now - (clock.elapsed % clock.frameInterval)
+		// an if statement for all the different game states
 		if (game.gameState == "menu_screen") {
-			if (!mainMenu.initialized) {
+			if (!mainMenu.initialized) { // initializing the main menu and storing the time (in milliseconds) before the menu loaded in (to get the amount of time the menu has been loaded for)
 				mainMenu.startTime = performance.now()
 				mainMenu.initialized = true
 			}
 			mainMenu.sinceStart = performance.now() - mainMenu.startTime
+			// background drawing code that only updates the background if the game state is title or at the nintendo logo
 			if (game.subGameState == "title" || game.subGameState == "nintendo") {
 				menuBackgroundValues.backgroundXPos1 = -((mainMenu.sinceStart / 1000 * menuBackgroundValues.scrollSpeed) % WIDTH)
 				menuBackgroundValues.backgroundXPos2 = WIDTH - ((mainMenu.sinceStart / 1000 * menuBackgroundValues.scrollSpeed) % WIDTH)
 			}
+			// draws the background and other tiny things
 			ctx.drawImage(resources.get("sprites/title_screen/title_background.png"), menuBackgroundValues.backgroundXPos1, 0)
 			ctx.drawImage(resources.get("sprites/title_screen/title_background.png"), menuBackgroundValues.backgroundXPos2, 0)
 			ctx.drawImage(resources.get("sprites/title_screen/int_game_title.png"), 11, 25)
 			ctx.drawImage(resources.get("sprites/title_screen/title_credits.png"), 84, 199)
+			// an if statement for the different sub states the game has
 			if (game.subGameState == "player_select") {
+				// drawing the player select menu
 				drawRect(ctx, 64, 120, 125, 40, true, "#000000")
+				// first time drawing the recolored text!
 				gameFont.drawText(ctx, "blueGloss", "1", 100, 128)
 				gameFont.drawText(ctx, "pinkGloss", "2", 100, 144)
 				gameFont.drawText(ctx, "blue", "p game", 108, 128)
 				gameFont.drawText(ctx, "pink", "p game", 108, 144)
+				// drawing a mushroom at a location based on what the player has selected
 				if (raceSetupValues.playerCount == 0) {
 					ctx.drawImage(resources.get("sprites/title_screen/selector_mushroom.png"), 83, 127)
 				} else {
 					ctx.drawImage(resources.get("sprites/title_screen/selector_mushroom.png"), 83, 143)
 				}
 			} else if (game.subGameState == "mode_select") {
+				// drawing the mode select!
+				// however, the only programmed mode is scuffed time trials
 				drawRect(ctx, 64, 120, 125, 40, true, "#000000")
 				gameFont.drawText(ctx, "blue", "mariokart gp", 88, 128)
 				gameFont.drawText(ctx, "pink", "time trial", 88, 144)
@@ -280,6 +326,8 @@ function main() {
 					ctx.drawImage(resources.get("sprites/title_screen/selector_mushroom.png"), 71, 143)
 				}
 			} else if (game.subGameState == "speed_select") {
+				// speed selection!
+				// however, it isn't used so no comments here
 				drawRect(ctx, 64, 120, 125, 40, true, "#000000")
 				gameFont.drawText(ctx, "blueGloss", "50", 92, 128)
 				gameFont.drawText(ctx, "blue", "^ class", 108, 128)
@@ -291,7 +339,8 @@ function main() {
 					ctx.drawImage(resources.get("sprites/title_screen/selector_mushroom.png"), 75, 143)
 				}
 			} else if (game.subGameState == "confirm_select") {
-				if (raceSetupValues.mode == 0) {
+				// drawing the screen where it asks you to confirm your selection
+				if (raceSetupValues.mode == 0) { // if statement that draws different menus based on what mode you've chosen
 					drawRect(ctx, 64, 112, 125, 86, true, "#000000")
 					ctx.drawImage(resources.get("sprites/title_screen/selector_mushroom.png"), 71, 119)
 					ctx.drawImage(resources.get("sprites/title_screen/selector_mushroom.png"), 71, 135)
@@ -349,7 +398,8 @@ function main() {
 						gameFont.drawText(ctx, "blue", "(  )", 152, 168)
 					}
 				}
-			} else if (game.subGameState == "fade_select") {
+			} else if (game.subGameState == "fade_select") { // if the player has confimed their selection, start to transition to the character selection
+				// code to fadeout the entire screen
 				if (!mainMenu.fadeOutInit) {
 					mainMenu.fadeOutStart = performance.now()
 					mainMenu.fadeOutInit = true
@@ -359,10 +409,10 @@ function main() {
 					drawRect(ctx, 0, 0, WIDTH, HEIGHT, true, [0, 0, 0])
 					ctx.globalAlpha = 0
 				} else {
-					game.gameState = "character_select"
+					game.gameState = "character_select" // once faded to black, switch the game states
 				}
 			}
-			if (mainMenu.sinceStart <= 4000 && game.subGameState === "nintendo") {
+			if (mainMenu.sinceStart <= 4000 && game.subGameState === "nintendo") { // the nintendo logo fade-in
 				ctx.globalAlpha = 2 - 0.0005 * mainMenu.sinceStart
 				drawRect(ctx, 0, 0, WIDTH, HEIGHT, true, [0, 0, 0])
 				ctx.globalAlpha = 1
@@ -374,29 +424,32 @@ function main() {
 			} else if (game.subGameState === "nintendo") {
 				game.subGameState = "title"
 			}
-		} else if (game.gameState == "character_select") {
+		} else if (game.gameState == "character_select") { // character select game state
 			if (!characterMenu.init) {
-				characterMenu.startTime = Math.floor(performance.now())
+				characterMenu.startTime = Math.floor(performance.now()) // same deal with the main menu init: finding out the elapsed time since the game has been at the character_select state
 				characterMenu.init = true
 			}
+			// drawing the character select menu
 			ctx.drawImage(resources.get("sprites/character_screen/banner.png"), 176 - (((performance.now() - characterMenu.startTime) / 25) % 256), 23)
 			ctx.drawImage(resources.get("sprites/character_screen/select_background.png"), 37, 77)
 			ctx.drawImage(resources.get("sprites/character_screen/select_background.png"), 85, 77)
+			// looping through that list of characterLayers we had so we can draw on the individually
 			characterLayers.forEach(
 				layerName => {
-					if (!(characterMenu.isSelected && characterMenu.character == layerName.charAt(9))) {
+					if (!(characterMenu.isSelected && characterMenu.character == layerName.charAt(9))) { // update the layers to have a little background ONLY if they aren't selected 
 						layers.getLayer(layerName).ctx.drawImage(resources.get("sprites/character_screen/select_background.png"), 0 - (((performance.now() - characterMenu.startTime) / 12) % 49), -6);
 						layers.getLayer(layerName).ctx.drawImage(resources.get("sprites/character_screen/select_background.png"), 48 - (((performance.now() - characterMenu.startTime) / 12) % 49), -6)
 					}
 				}
 			)
-			for (let y = 0; y < 2; y++) {
+			for (let y = 0; y < 2; y++) { // draws all the layers onto the main canvas
 				for (let x = 0; x < 4; x++) {
 					ctx.drawImage(layers.getLayer(`character${x + (y * 4)}`).canvas, 37 + 48 * x, 77 + 64 * y)
 				}
 			}
-			ctx.drawImage(resources.get("sprites/character_screen/frame.png"), 0, -1)
-			characterMenu.flash = (characterMenu.flash + 1) % 4
+			ctx.drawImage(resources.get("sprites/character_screen/frame.png"), 0, -1) // drawing even more of the menu
+			characterMenu.flash = (characterMenu.flash + 1) % 4 // a variable that stores when the P1 selector should flash
+			// the p1 selector only flashes when nothing is selected
 			if (!characterMenu.flash == 0 || characterMenu.isSelected || characterMenu.confirmSelect) {
 				switch (characterMenu.character) {
 					case 0:
@@ -425,22 +478,26 @@ function main() {
 						break;
 				}
 			}
-			if (characterMenu.isSelected && !characterMenu.confirmSelect) {
+			if (characterMenu.isSelected && !characterMenu.confirmSelect) { // extra visual indicators that you've selected a character, etc.
 				ctx.drawImage(resources.get("sprites/character_screen/p1_check.png"), 151, 190)
 			} else if (characterMenu.confirmSelect) {
 				ctx.drawImage(resources.get("sprites/character_screen/p1_confirm.png"), 151, 190)
 				if (!(characterMenu.characterAngle == 0)) {
-					characterMenu.characterAngle -= 1
+					characterMenu.characterAngle -= 1 // usually there would be a character on the character selection menu (but in this case, everything is yoshi)
+					// the character would spin back towards the player from the shortest path, then the game would start
 				} else {
-					game.gameState = "tmap_select"
+					game.gameState = "tmap_select" // change to time trials map select
 				}
 			}
+			// fade out real quick
 			if (performance.now() - characterMenu.startTime <= 500) {
 				ctx.globalAlpha = 1 - 0.002 * (performance.now() - characterMenu.startTime)
 				drawRect(ctx, 0, 0, WIDTH, HEIGHT, true, [0, 0, 0])
 				ctx.globalAlpha = 1
 			}
 		} else if (game.gameState == "tmap_select") {
+			// drawing the menu for the time trials map select (pretty much hard coded)
+			drawRect(ctx, 0, 0, 256, 224, true, "#FFFFFF")
 			drawRect(ctx, 0, 0, 256, 3, true, "#000000")
 			drawRect(ctx, 0, 107, 256, 8, true, "#000000")
 			drawRect(ctx, 0, 219, 256, 5, true, "#000000")
@@ -452,14 +509,17 @@ function main() {
 			gameFont.drawText(ctx, "mapSelectFont", "circuit", 172, 32)
 			gameFont.drawText(ctx, "mapSelectFontGloss", "1", 232, 32)
 		} else if (game.gameState == "in_game") {
-			clearCanvas(ctx)
+			// main, MAIN if statement
+			// the in_game portion of the game states
+			clearCanvas(ctx) // clear the screen
 			if (!raceValues.isFinished) {
-				console.log(player.angle)
+				// handling all the player movement and turning
 				if (controlBooleans.b) {
 					player.accleration_force.y = 5
 				}
 				if (controlBooleans.left) {
 					player.turn_accel -= 1
+					// drawing some background
 					raceValues.background_0_x = mod(raceValues.background_0_x + 1, 768)
 					raceValues.background_1_x = mod(raceValues.background_1_x + 2, 1280)
 				} else if (player.turn_accel < 0) {
@@ -485,58 +545,67 @@ function main() {
 				player.net_force.y = 0
 				player.net_force.add(player.accleration_force)
 				player.net_force.rotateDeg(player.angle)
+				// some collision checking for the player
 				player.hit = false
 				raceValues.mapBoundingBoxes.forEach(box => {
 					if ((-player.x + player.net_force.x > box[0] && -player.x + player.net_force.x < box[0] + box[2]) && (-player.y + player.net_force.y > box[1] && -player.y + player.net_force.y < box[1] + box[3])) {
-						player.x -= player.net_force.x * 2
-						player.y -= player.net_force.y * 2
-						player.hit = true
+						player.net_force.x = -player.net_force.x * 10 // looks janky when multiplied by 10 but a bug would happen if it was lower
+						player.net_force.y = -player.net_force.y * 10 // looks janky when multiplied by 10 but a bug would happen if it was lower
 					}
 				})
-				if (!player.hit) {
-					player.x += player.net_force.x
-					player.y += player.net_force.y
-				}
+				player.x += player.net_force.x // move the player's x position based on a vector
+				player.y += player.net_force.y // move the player's y position based on a vector
 			}
+			// setting the camera to where the player is
 			camera.x = player.x
 			camera.y = player.y
+			// some collision detection for laps
+			// for a lap to count, the player has to go into a checkpoint
 			if ((-player.x > 815 && -player.x < 1015) && (-player.y > 552 && -player.y < 560) && player.checkpointCollected) {
 				player.laps += 1
 				player.checkpointCollected = false
 			}
+			// normal mario kart has tens of these checkpoints, while I just have one. I guess it works though so you can't just keep going around the finish line
 			if ((-player.x > 5 && -player.x < 160) && (-player.y > 295 && -player.y < 330)) {
 				player.checkpointCollected = true
 			}
-			player.milliseconds = performance.now() - player.dt
+			if (player.laps != 5) { // keeps updating time as long as the player has not finished 5 laps
+				player.milliseconds = performance.now() - player.dt
+			}
+			// drawing of the map
 			layers.getLayer("map").ctx.drawImage(resources.get("sprites/maps/mario_circuit_2.png"), 0, 0)
 			drawRect(layers.getLayer("perspectiveMap").ctx, 0, 0, 256, 448, true, "#00D000")
 			layers.getLayer("perspectiveMap").ctx.save()
+			// rotating the map based on the player's current angle
 			layers.getLayer("perspectiveMap").ctx.translate(WIDTH / 2, HEIGHT / 2)
 			layers.getLayer("perspectiveMap").ctx.rotate(-player.angle * (Math.PI / 180))
 			layers.getLayer("perspectiveMap").ctx.drawImage(layers.getLayer("map").canvas, camera.x, camera.y)
-			//drawRect(layers.getLayer("perspectiveMap").ctx, 0, 0, 100, 100, true, "#FF0000")
+			//drawRect(layers.getLayer("perspectiveMap").ctx, 0, 0, 100, 100, true, "#FF0000") // red square to debug, remove if wanted
 			layers.getLayer("perspectiveMap").ctx.restore()
 			for (let i = 0; i < 83; i++) {
-				ctx.drawImage(layers.getLayer("perspectiveMap").canvas, 0, (448 / 83) * i, 256, 1, -i / 2, 24 + i, 256 + i, 1)
+				ctx.drawImage(layers.getLayer("perspectiveMap").canvas, 0, (448 / 83) * i, 256, 1, -i / 2, 24 + i, 256 + i, 1) // the 3 line, mode 7 code (no perspective theory, no raycasting, pure noob)
 			}
+			// drawing the backgrounds 
 			ctx.drawImage(resources.get("sprites/maps/mc2_background_0.png"), raceValues.background_0_x - 768, -8)
 			ctx.drawImage(resources.get("sprites/maps/mc2_background_0.png"), raceValues.background_0_x, -8)
 			ctx.drawImage(resources.get("sprites/maps/mc2_background_1.png"), raceValues.background_1_x - 1280, -8)
 			ctx.drawImage(resources.get("sprites/maps/mc2_background_1.png"), raceValues.background_1_x, -8)
 			ctx.drawImage(resources.get("sprites/maps/mc2_scuffed_minimap.png"), 0, 115)
 			ctx.drawImage(resources.get("sprites/driver/yoshi/idle.png"), WIDTH / 2 - 16, 24)
+			// drawing black bars where H-BLANKS would usually happen. Not needed but it adds to the feel I guess?
 			drawRect(ctx, 0, 0, 256, 3, true, "#000000")
 			drawRect(ctx, 0, 107, 256, 8, true, "#000000")
 			drawRect(ctx, 0, 219, 256, 5, true, "#000000")
+			// text indicators for time taken and laps done. it isn't debug but the debug font was already recoloured to what I wanted
 			gameFont.drawText(ctx, "debugFont", "Laps " + player.laps, 0, 16)
 			gameFont.drawText(ctx, "debugFont", "Time " + Math.round(player.milliseconds) + " ms", 0, 32)
 		}
-		if (game.debug) {
+		if (game.debug) { // extra info for debugging (press M)
 			gameFont.drawText(ctx, "debugFont", "FPS-" + Math.round(fps.framesPerSecond), 0, 0)
 			gameFont.drawText(ctx, "debugFont", "gamestate-" + game.gameState.replace("_", "."), 0, 8)
 			gameFont.drawText(ctx, "debugFont", "subgamestate-" + game.subGameState.replace("_", "."), 0, 16)
 		}
-		fps.pastTime = performance.now()
+		fps.pastTime = performance.now() // fps
 	}
 };
 //https://gamedev.stackexchange.com/questions/24957/doing-an-snes-mode-7-affine-transform-effect-in-pygame
@@ -592,7 +661,7 @@ function main() {
 		}
 		return ready;
 	}
-	function onReady(func) {
+	function onReady(func) { // call every function in a array
 		readyCallbacks.push(func);
 	}
 	window.resources = {
@@ -616,7 +685,7 @@ function clearCanvas(context) {
 	and processes it
 */
 function onKeyDown(event) {
-	// DON"T FORGET BATTLE MODE
+	// if statements that check for a game state, and responds accordingly to what should happen if that button is pressed during that game state
 	console.log(event)
 	if (event.keyCode == controlBinds.debug && !event.repeat) {
 		game.debug = !game.debug
@@ -635,7 +704,7 @@ function onKeyDown(event) {
 		} else if (game.gameState == "character_select" && !characterMenu.isSelected) {
 			characterMenu.character = mod(characterMenu.character - 4, 8)
 		}
-		controlBooleans.up = true
+		controlBooleans.up = true // booleans at the end of each button press to make sure buttons can't be spammed 
 	}
 	if (event.keyCode == controlBinds.left && !controlBooleans.left) { // LEFT
 		if (game.gameState == "menu_screen") {
@@ -700,6 +769,7 @@ function onKeyDown(event) {
 				characterMenu.confirmSelect = true
 			}
 		} else if (game.gameState == "tmap_select") {
+			track.play()
 			player.dt = performance.now()
 			game.gameState = "in_game"
 		}
@@ -745,6 +815,7 @@ function onKeyDown(event) {
 				characterMenu.confirmSelect = true
 			}
 		} else if (game.gameState == "time_map_select") {
+			track.play()
 			player.dt = performance.now()
 			game.gameState = "in_game"
 		}
